@@ -295,14 +295,6 @@ task.spawn(function()
     end
 end)
 
-    Name = "Auto Buy Packs",
-    Description = "Automatically buys selected pack",
-    CurrentValue = false,
-    Callback = function(v)
-        autoBuy = v
-    end
-})
-
 
 --================ FLY (SAFE / ANTI-KICK) =================
 
