@@ -291,33 +291,37 @@ task.spawn(function()
                 pingStr = pingStr.." 🔴"
             end
 
-            PingLabel:Set(pingStr)
+            PingLabel:Set({Text = pingStr})
         end
     end
 end)
 
+--================ PACKS =================
+tPlayers:CreateSection("Packs")
 
-
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- PACK SERVİSİ (Knit)
-local PackService
+local PackService = nil
 pcall(function()
-    PackService =
-        ReplicatedStorage
-        :WaitForChild("Packages")
-        :WaitForChild("_Index")
-        :WaitForChild("sleitnick_knit@1.7.0")
-        :WaitForChild("knit")
-        :WaitForChild("Services")
-        :WaitForChild("PacksService")
+    PackService = ReplicatedStorage
+        :WaitForChild("Packages", 5)
+        :WaitForChild("_Index", 5)
+        :WaitForChild("sleitnick_knit@1.7.0", 5)
+        :WaitForChild("knit", 5)
+        :WaitForChild("Services", 5)
+        :WaitForChild("PacksService", 5)
 end)
 
-local BuyRemote
-pcall(function()
-    BuyRemote = PackService
-        :WaitForChild("RF")
-        :WaitForChild("ProcessPurchase")
-end)
+-- BUY REMOTE
+local BuyRemote = nil
+if PackService then
+    pcall(function()
+        BuyRemote = PackService
+            :WaitForChild("RF", 5)
+            :WaitForChild("ProcessPurchase", 5)
+    end)
+end
 
 -- PACK TYPES
 local packTypes = {
@@ -333,7 +337,10 @@ local autoBuy = false
 
 -- ================= BUY FUNC =================
 local function buyPack()
-    if not BuyRemote then return end
+    if not BuyRemote then
+        warn("[PACKS] BuyRemote not found")
+        return
+    end
 
     pcall(function()
         BuyRemote:InvokeServer(selectedPack)
@@ -350,7 +357,6 @@ task.spawn(function()
 end)
 
 -- ================= UI =================
-tPlayers:CreateSection("Packs")
 tPlayers:CreateDropdown({
     Name = "Select Pack",
     Options = packTypes,
@@ -375,6 +381,7 @@ tPlayers:CreateToggle({
         autoBuy = v
     end
 })
+
 
 --================ FLY (SAFE / ANTI-KICK) =================
 
