@@ -218,86 +218,6 @@ end
 
 --================ PLAYERS TAB =================
 local tPlayers = Window:CreateTab("Players", "users")
---================ FPS FIX =================
-
-
---================ PACKS =================
-tPlayers:CreateSection("Packs")
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- PACK SERVİSİ (Knit)
-local PackService = nil
-pcall(function()
-    PackService = ReplicatedStorage
-        :WaitForChild("Packages", 5)
-        :WaitForChild("_Index", 5)
-        :WaitForChild("sleitnick_knit@1.7.0", 5)
-        :WaitForChild("knit", 5)
-        :WaitForChild("Services", 5)
-        :WaitForChild("PacksService", 5)
-end)
-
--- BUY REMOTE
-local BuyRemote = nil
-if PackService then
-    pcall(function()
-        BuyRemote = PackService
-            :WaitForChild("RF", 5)
-            :WaitForChild("ProcessPurchase", 5)
-    end)
-end
-
--- PACK TYPES
-local packTypes = {
-    "Skill",
-    "Speed",
-    "Stamina",
-    "Defense",
-    "Random"
-}
-
-local selectedPack = "Skill"
-local autoBuy = false
-
--- ================= BUY FUNC =================
-local function buyPack()
-    if not BuyRemote then
-        warn("[PACKS] BuyRemote not found")
-        return
-    end
-
-    pcall(function()
-        BuyRemote:InvokeServer(selectedPack)
-    end)
-end
-
--- ================= AUTO BUY LOOP =================
-task.spawn(function()
-    while task.wait(0.6) do
-        if autoBuy then
-            buyPack()
-        end
-    end
-end)
-
--- ================= UI =================
-tPlayers:CreateDropdown({
-    Name = "Select Pack",
-    Options = packTypes,
-    CurrentOption = selectedPack,
-    Callback = function(v)
-        selectedPack = v
-    end
-})
-
-tPlayers:CreateButton({
-    Name = "Buy Selected Pack",
-    Callback = function()
-        buyPack()
-    end
-})
-
 local fpsEnabled = false
 local fpsLabel
 
@@ -551,6 +471,73 @@ UIS.InputBegan:Connect(function(i,gp)
         StaminaController.HasInfiniteStamina:set(staminaOn)
     end
 end)
+--================ PACKS MODULE =================
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Knit = require(ReplicatedStorage.Packages.Knit)
+local PacksService = Knit.GetService("PacksService")
+
+local SelectedPack = "Skill"
+local PurchaseOption = "Coins"
+local AutoBuy = false
+local Buying = false
+
+local PackTypes = {
+    "Skill",
+    "Speed",
+    "Stamina",
+    "Defense",
+    "Random"
+}
+
+local function BuyPack()
+    if Buying then return end
+    Buying = true
+
+    pcall(function()
+        PacksService:ProcessPurchase(SelectedPack, PurchaseOption)
+    end)
+
+    task.wait(0.6)
+    Buying = false
+end
+
+task.spawn(function()
+    while task.wait(1.6) do
+        if AutoBuy and not Buying then
+            BuyPack()
+        end
+    end
+end)
+
+--================ UI =================
+local PacksTab = Window:CreateTab("Packs", "shopping-cart")
+
+PacksTab:CreateParagraph({
+    Title = "Packs",
+    Content = "Coins Auto Buy (Stable)"
+})
+
+PacksTab:CreateDropdown({
+    Name = "Select Pack",
+    Options = PackTypes,
+    CurrentOption = SelectedPack,
+    Callback = function(v)
+        SelectedPack = v
+    end
+})
+
+PacksTab:CreateButton({
+    Name = "Buy Pack (Coins)",
+    Callback = BuyPack
+})
+
+PacksTab:CreateToggle({
+    Name = "Auto Buy Packs",
+    CurrentValue = false,
+    Callback = function(v)
+        AutoBuy = v
+    end
+})
 
 --================ ANIMATIONS / DANCE TAB =================
 local tAnim = Window:CreateTab("Animations / Dances", "party")
