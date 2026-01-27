@@ -295,7 +295,9 @@ task.spawn(function()
         end
     end
 end)
-tPlayers:CreateSection("Packs")
+
+
+
 
 -- PACK SERVİSİ (Knit)
 local PackService
@@ -348,7 +350,7 @@ task.spawn(function()
 end)
 
 -- ================= UI =================
-
+tPlayers:CreateSection("Packs")
 tPlayers:CreateDropdown({
     Name = "Select Pack",
     Options = packTypes,
