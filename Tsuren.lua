@@ -219,82 +219,7 @@ end
 --================ PLAYERS TAB =================
 local tPlayers = Window:CreateTab("Players", "users")
 --================ FPS FIX =================
-local fpsEnabled = false
-local fpsLabel
 
-local function setFPS(v)
-    fpsEnabled = v
-    local gui = LocalPlayer:FindFirstChild("PlayerGui")
-    if not gui then return end
-
-    if v and not fpsLabel then
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "FPSGui"
-        screenGui.Parent = gui
-
-        fpsLabel = Instance.new("TextLabel")
-        fpsLabel.Name = "FPSLabel"
-        fpsLabel.Size = UDim2.new(0,100,0,30)
-        fpsLabel.Position = UDim2.new(0,10,0,10)
-        fpsLabel.BackgroundTransparency = 0.4
-        fpsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
-        fpsLabel.TextColor3 = Color3.fromRGB(255,255,255)
-        fpsLabel.TextScaled = true
-        fpsLabel.Text = "FPS: 0"
-        fpsLabel.Parent = screenGui
-    elseif not v and fpsLabel then
-        fpsLabel.Parent:Destroy()
-        fpsLabel = nil
-    end
-end
-
--- Toggle UI
-tPlayers:CreateToggle({
-    Name="Show FPS (F7)",
-    CurrentValue=false,
-    Callback=setFPS
-})
-
--- Keybind F7
-UIS.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.F7 then
-        setFPS(not fpsEnabled)
-    end
-end)
-
--- Update FPS every frame
-RunService.RenderStepped:Connect(function(dt)
-    if fpsEnabled and fpsLabel then
-        local fps = math.floor(1/dt)
-        fpsLabel.Text = "FPS: "..fps
-    end
-end)
-local Stats = game:GetService("Stats")
-local PingValue = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-local pingMs = math.floor(PingValue)
-local PingLabel = tPlayers:CreateLabel("Ping:")
-
-task.spawn(function()
-    while task.wait(1) do
-        local ok, ping = pcall(function()
-            return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-        end)
-
-        if ok and PingLabel then
-            local pingStr = "Ping: "..math.floor(ping).." ms"
-            if ping < 80 then
-                pingStr = pingStr.." 🟢"
-            elseif ping < 150 then
-                pingStr = pingStr.." 🟡"
-            else
-                pingStr = pingStr.." 🔴"
-            end
-
-            PingLabel:Set({Text = pingStr})
-        end
-    end
-end)
 
 --================ PACKS =================
 tPlayers:CreateSection("Packs")
@@ -373,7 +298,83 @@ tPlayers:CreateButton({
     end
 })
 
+local fpsEnabled = false
+local fpsLabel
+
+local function setFPS(v)
+    fpsEnabled = v
+    local gui = LocalPlayer:FindFirstChild("PlayerGui")
+    if not gui then return end
+
+    if v and not fpsLabel then
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "FPSGui"
+        screenGui.Parent = gui
+
+        fpsLabel = Instance.new("TextLabel")
+        fpsLabel.Name = "FPSLabel"
+        fpsLabel.Size = UDim2.new(0,100,0,30)
+        fpsLabel.Position = UDim2.new(0,10,0,10)
+        fpsLabel.BackgroundTransparency = 0.4
+        fpsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        fpsLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        fpsLabel.TextScaled = true
+        fpsLabel.Text = "FPS: 0"
+        fpsLabel.Parent = screenGui
+    elseif not v and fpsLabel then
+        fpsLabel.Parent:Destroy()
+        fpsLabel = nil
+    end
+end
+
+-- Toggle UI
 tPlayers:CreateToggle({
+    Name="Show FPS (F7)",
+    CurrentValue=false,
+    Callback=setFPS
+})
+
+-- Keybind F7
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.F7 then
+        setFPS(not fpsEnabled)
+    end
+end)
+
+-- Update FPS every frame
+RunService.RenderStepped:Connect(function(dt)
+    if fpsEnabled and fpsLabel then
+        local fps = math.floor(1/dt)
+        fpsLabel.Text = "FPS: "..fps
+    end
+end)
+local Stats = game:GetService("Stats")
+local PingValue = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+local pingMs = math.floor(PingValue)
+local PingLabel = tPlayers:CreateLabel("Ping:")
+
+task.spawn(function()
+    while task.wait(1) do
+        local ok, ping = pcall(function()
+            return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+        end)
+
+        if ok and PingLabel then
+            local pingStr = "Ping: "..math.floor(ping).." ms"
+            if ping < 80 then
+                pingStr = pingStr.." 🟢"
+            elseif ping < 150 then
+                pingStr = pingStr.." 🟡"
+            else
+                pingStr = pingStr.." 🔴"
+            end
+
+            PingLabel:Set({Text = pingStr})
+        end
+    end
+end)
+
     Name = "Auto Buy Packs",
     Description = "Automatically buys selected pack",
     CurrentValue = false,
