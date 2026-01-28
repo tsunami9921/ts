@@ -1,6 +1,4 @@
--- Made by Tsubasa
--- TsurenStudios | SLS
--- FULL FINAL SCRIPT (FIXED ALL + STADIUMNEONS COLLISION + CLEAN WELCOME)
+-- Maded by Tsubasa
 
 -- SERVICES
 local Players = game:GetService("Players")
@@ -19,8 +17,8 @@ local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS",
     LoadingTitle = "TsurenStudios",
-    LoadingSubtitle = "Made by Tsubasa",
-    Theme = "Default"
+    LoadingSubtitle = "Made by Tsubasa ♥️",
+    Theme = "Light"
 })
 
 -- UTILS
@@ -542,7 +540,7 @@ PacksTab:CreateToggle({
 
 
 --================ ANIMATIONS / DANCE TAB =================
-local tAnim = Window:CreateTab("Animations / Dances", "party")
+local tAnim = Window:CreateTab("Animations / Dances","star")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
