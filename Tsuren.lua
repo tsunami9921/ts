@@ -186,7 +186,7 @@ end
 --================ WELCOME TAB =================
 local WelcomeTab = Window:CreateTab("Welcome","home")
 WelcomeTab:CreateLabel("Welcome to TsurenStudios Hub!")
-WelcomeTab:CreateLabel("Created by Tsubasa | SLS")
+WelcomeTab:CreateLabel("Credit by Tsubasa | SLS")
 WelcomeTab:CreateLabel("Use responsibly. This script modifies gameplay features.")
 WelcomeTab:CreateParagraph({
     Title = "TsurenStudios | SLS Hub",
@@ -290,7 +290,7 @@ task.spawn(function()
                 pingStr = pingStr.." 🔴"
             end
 
-            PingLabel:Set({Text = pingStr})
+     PingLabel:Set(pingStr)
         end
     end
 end)
@@ -605,7 +605,6 @@ for _, anim in pairs(animations) do
             playAnimation(anim)
         end
     })
-end
 end)
 
 
