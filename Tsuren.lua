@@ -605,7 +605,7 @@ for _, anim in pairs(animations) do
             playAnimation(anim)
         end
     })
-end)
+end
 
 
 --==================================================
