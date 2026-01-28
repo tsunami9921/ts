@@ -463,73 +463,83 @@ UIS.InputBegan:Connect(function(i,gp)
         StaminaController.HasInfiniteStamina:set(staminaOn)
     end
 end)
---================ PACKS MODULE =================
+
+--==================================================
+-- PACK TAB
+--==================================================
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PacksService = Knit.GetService("PacksService")
 
-local SelectedPack = "Skill"
-local PurchaseOption = "Coins"
+local PacksData = require(ReplicatedStorage.Shared.Defaults.Packs)
+
+-- Pack list
+local PackTypes = {}
+for name,_ in pairs(PacksData.ItemData) do
+    table.insert(PackTypes, name)
+end
+table.sort(PackTypes)
+
+-- State
+local SelectedPack = PackTypes[1]
 local AutoBuy = false
 local Buying = false
 
-local PackTypes = {
-    "Skill",
-    "Speed",
-    "Stamina",
-    "Defense",
-    "Random"
-}
-
+-- Buy func
 local function BuyPack()
     if Buying then return end
     Buying = true
 
     pcall(function()
-        PacksService:ProcessPurchase(SelectedPack, PurchaseOption)
+        PacksService:ProcessPurchase(SelectedPack, "Coins")
     end)
 
-    task.wait(0.6)
+    task.wait(1.2)
     Buying = false
 end
 
+-- Auto loop
 task.spawn(function()
-    while task.wait(1.6) do
+    while task.wait(2) do
         if AutoBuy and not Buying then
             BuyPack()
         end
     end
 end)
 
---================ UI =================
+-- UI
 local PacksTab = Window:CreateTab("Packs", "shopping-cart")
 
-PacksTab:CreateParagraph({
-    Title = "Packs",
-    Content = "Coins Auto Buy (Stable)"
-})
-
 PacksTab:CreateDropdown({
-    Name = "Select Pack",
+    Name = "Pack",
     Options = PackTypes,
     CurrentOption = SelectedPack,
     Callback = function(v)
-        SelectedPack = v
+        if type(v) == "table" then
+            SelectedPack = v[1]
+        else
+            SelectedPack = v
+        end
     end
 })
 
 PacksTab:CreateButton({
-    Name = "Buy Pack (Coins)",
-    Callback = BuyPack
+    Name = "Buy Pack",
+    Callback = function()
+        BuyPack()
+    end
 })
 
 PacksTab:CreateToggle({
-    Name = "Auto Buy Packs",
+    Name = "Auto Buy",
     CurrentValue = false,
     Callback = function(v)
         AutoBuy = v
     end
 })
+
 
 --================ ANIMATIONS / DANCE TAB =================
 local tAnim = Window:CreateTab("Animations / Dances", "party")
@@ -597,6 +607,117 @@ for _, anim in pairs(animations) do
     })
 end
 end)
+
+
+--==================================================
+-- TEAM + POSITION TAB
+--==================================================
+
+local Players = game:GetService("Players")
+local Teams = game:GetService("Teams")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local Knit = require(ReplicatedStorage.Packages.Knit)
+
+-- Controller
+local TeamController
+pcall(function()
+    TeamController = Knit.GetController("TeamController")
+end)
+
+-- Positions
+local Positions = {
+    "GK","CB","LB","RB",
+    "CM","CDM","CAM",
+    "LW","RW","CF","ST"
+}
+
+-- State
+local SelectedTeam = "Home"
+local SelectedPos = Positions[1]
+local AutoJoin = false
+
+-- Join Team func
+local function JoinTeam(teamName)
+    pcall(function()
+        if TeamController and TeamController.JoinTeam then
+            TeamController:JoinTeam(teamName)
+        else
+            LocalPlayer.Team = Teams:FindFirstChild(teamName)
+        end
+    end)
+end
+
+-- Set Position func
+local function SetPosition(pos)
+    pcall(function()
+        if TeamController and TeamController.SetPosition then
+            TeamController:SetPosition(pos)
+        end
+    end)
+
+    -- fallback attribute
+    LocalPlayer:SetAttribute("TeamPosition", pos)
+end
+
+-- Auto Apply loop
+task.spawn(function()
+    while task.wait(2) do
+        if AutoJoin then
+            JoinTeam(SelectedTeam)
+            task.wait(0.3)
+            SetPosition(SelectedPos)
+        end
+    end
+end)
+
+-- UI
+local TeamTab = Window:CreateTab("Team", "users")
+
+TeamTab:CreateDropdown({
+    Name = "Select Team",
+    Options = {"Home","Away"},
+    CurrentOption = SelectedTeam,
+    Callback = function(v)
+        if type(v) == "table" then
+            SelectedTeam = v[1]
+        else
+            SelectedTeam = v
+        end
+    end
+})
+
+TeamTab:CreateDropdown({
+    Name = "Select Position",
+    Options = Positions,
+    CurrentOption = SelectedPos,
+    Callback = function(v)
+        if type(v) == "table" then
+            SelectedPos = v[1]
+        else
+            SelectedPos = v
+        end
+    end
+})
+
+TeamTab:CreateButton({
+    Name = "Apply Now",
+    Callback = function()
+        JoinTeam(SelectedTeam)
+        task.wait(0.3)
+        SetPosition(SelectedPos)
+    end
+})
+
+TeamTab:CreateToggle({
+    Name = "Auto Join + Auto Position",
+    CurrentValue = false,
+    Callback = function(v)
+        AutoJoin = v
+    end
+})
+
 --================ BALL TAB =================
 local tBall=Window:CreateTab("Ball","circle")
 local freezeBall=false
