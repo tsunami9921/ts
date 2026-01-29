@@ -196,14 +196,14 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
---================ MAIN TAB (FULL TSUREN) =================
+--================ MAIN TAB (TSURENMODULE FULL FIX) =================
 local tMain = Window:CreateTab("Main", "layers")
 
 -- AutoFarm toggle ve cooldown
 local AutoFarmEnabled = false
 local AutoFarmCooldown = 0.5 -- default cooldown
 
--- Cooldown slider
+-- Farm cooldown slider
 tMain:CreateSlider({
     Name = "Farm Cooldown (sec)",
     Range = {0.3, 2},
@@ -239,13 +239,40 @@ tMain:CreateToggle({
                             hrp.CFrame = workspace.Stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
                         end
 
-                        -- AutoFarm ve AutoGetBall + AutoShoot
-                        pcall(function()
-                            TsurenModule.TrueAutoGetBall()
-                            TsurenModule.TrueAutoFarm()
-                        end)
-                    end
+                        -- AutoGetBall
+                        pcall(TsurenModule.TrueAutoGetBall)
 
+                        -- AutoFarm + AutoShoot (artık shoot çalışacak)
+                        for _, enemy in pairs(game.Players:GetPlayers()) do
+                            if enemy.Team ~= player.Team and enemy.Team ~= nil then
+                                local goal = workspace.Stadium.Teams[enemy.Team.Name].Goal
+                                if goal then
+                                    -- Hitbox büyüt
+                                    goal.Hitbox.Size = Vector3.new(800,50,800)
+                                    task.wait(0.2)
+                                    
+                                    -- Topu bul
+                                    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+                                    if ball then
+                                        local args = {
+                                            "ShotActivated",
+                                            ball,
+                                            Vector3.new(goal.Position.X, goal.Position.Y + 3, goal.Position.Z), -- hedef gol merkezi
+                                            (goal.Position - ball.Position).Unit * 50 -- yön ve güç
+                                        }
+                                        local RF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+                                            :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+                                            :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+                                            :WaitForChild("RE"):WaitForChild("PerformAction")
+                                        RF:FireServer(unpack(args))
+                                    end
+                                    
+                                    -- Hitbox eski hâle
+                                    goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
+                                end
+                            end
+                        end
+                    end
                     task.wait(AutoFarmCooldown)
                 end
 
@@ -259,27 +286,7 @@ tMain:CreateToggle({
     end
 })
 
--- Ekstra: Goal Hitbox toggle (Opsiyonel ama TsurenModule destekli)
-local GoalHitboxEnabled = false
-tMain:CreateToggle({
-    Name = "Goal Hitbox Genişlet",
-    CurrentValue = false,
-    Callback = function(state)
-        GoalHitboxEnabled = state
-        spawn(function()
-            while GoalHitboxEnabled do
-                pcall(function()
-                    TsurenModule.TrueGoalHitbox(800,50,800)
-                end)
-                task.wait(0.5)
-            end
-            -- kapatınca eski boyuta döndür
-            pcall(TsurenModule.FalseGoalHitbox)
-        end)
-    end
-})
-
--- Extra: Ball Freeze Toggle
+-- Freeze Ball toggle (opsiyonel)
 local FreezeBall = false
 tMain:CreateToggle({
     Name = "Freeze Ball",
