@@ -276,10 +276,19 @@ MainTab:CreateToggle({
                             end
                         end
 
-                        -- AutoShoot
                         if HasBall() then
-                            AutoShoot()
+            pcall(function()
+                TsurenModule.TrueAutoShoot()
+            end)
+        end
+    end
+
+    task.wait(0.2)
                         end
+
+             pcall(function()
+            TsurenModule.TrueAutoGetBall()
+        end)
 
                         -- Goal hitbox aç/kapa
                         for _, pl in pairs(game.Players:GetPlayers()) do
