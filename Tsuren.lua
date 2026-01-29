@@ -189,32 +189,26 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
-local MainTab = Window:CreateTab("Main")
+-- =========================
+-- TSURENMODULE
+-- =========================
+local TsurenModule = {}
 
-
-local AutoFarmEnabled = false
-local function HasBall()
-    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
-    local player = game.Players.LocalPlayer
-    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not ball or not hrp then return false end
-
-    -- Topun network owner biz miyiz?
-    local ok, owner = pcall(function() return ball:GetNetworkOwner() end)
-    if ok and owner == player then
-        return true
+-- Goal hitbox eski haline döndür
+function TsurenModule.FalseGoalHitbox()
+    for _, player in game.Players:GetPlayers() do
+        if player.Team ~= game.Players.LocalPlayer.Team and player.Team ~= nil then
+            local enemyTeam = player.Team
+            local goal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(enemyTeam.Name)
+            if goal and goal:FindFirstChild("Goal") and goal.Goal:FindFirstChild("Hitbox") then
+                goal.Goal.Hitbox.Size = Vector3.new(31.327,11.278,8.289)
+            end
+        end
     end
-
-    -- Yakınlık kontrolü (opsiyonel)
-    if (ball.Position - hrp.Position).Magnitude < 6 then
-        return true
-    end
-
-    return false
 end
 
--- Topa otomatik shoot
-local function AutoShoot()
+-- Top otomatik shoot
+function TsurenModule.TrueAutoShoot()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     if not ball then return end
 
@@ -230,12 +224,62 @@ local function AutoShoot()
         :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
         :WaitForChild("RE"):WaitForChild("PerformAction")
 
-    ActionService:FireServer(unpack(args))
+    pcall(function()
+        ActionService:FireServer(unpack(args))
+    end)
 end
 
+-- Top geldiğinde otomatik almak
+function TsurenModule.TrueAutoGetBall()
+    local player = game.Players.LocalPlayer
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p:GetAttribute("HasBall", false) and p.Team ~= player.Team and p:GetAttribute("TeamPosition") ~= "GK" then
+            local character = player.Character
+            if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+
+            local originalCFrame = character.HumanoidRootPart.CFrame
+            character:PivotTo(p.Character.HumanoidRootPart.CFrame)
+
+            local tackleArgs = {"TackleActivated", 9999999999.99}
+            local TackleRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+                :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+                :WaitForChild("RF"):WaitForChild("PerformActionThenGet")
+            pcall(function()
+                TackleRF:InvokeServer(unpack(tackleArgs))
+                TackleRF:InvokeServer(unpack(tackleArgs))
+                TackleRF:InvokeServer(unpack(tackleArgs))
+            end)
+
+            character:PivotTo(originalCFrame)
+        end
+    end
+end
+
+-- Top bizde mi kontrolü
+local function HasBall()
+    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+    local player = game.Players.LocalPlayer
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not ball or not hrp then return false end
+
+    local ok, owner = pcall(function() return ball:GetNetworkOwner() end)
+    if ok and owner == player then
+        return true
+    end
+
+    if (ball.Position - hrp.Position).Magnitude < 6 then
+        return true
+    end
+
+    return false
+end
+
+local MainTab = Window:CreateTab("Main")
+local AutoFarmEnabled = false
 
 MainTab:CreateToggle({
-    Name = "AutoFarm Aç/Kapa",
+    Name = "AutoFarm (Beta)",
     CurrentValue = false,
     Flag = "AutoFarmToggle",
     Callback = function(state)
@@ -245,55 +289,31 @@ MainTab:CreateToggle({
                 while AutoFarmEnabled do
                     local player = game.Players.LocalPlayer
                     local character = player.Character
-
                     if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
-                        
+                        -- Hitbox büyüt
                         character.Hitbox.Size = Vector3.new(500,50,500)
 
-                        
+                        -- Saha üstüne teleport
                         local offset = Vector3.new(0,20,0)
                         if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
                             character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        
-                        for _, p in pairs(game.Players:GetPlayers()) do
-                            if p:GetAttribute("HasBall", false) and p.Team ~= player.Team and p:GetAttribute("TeamPosition") ~= "GK" then
-                                local currentCFrame = character.HumanoidRootPart.CFrame
-                                character:PivotTo(p.Character.HumanoidRootPart.CFrame)
-
-                                -- Tackle
-                                local tackleArgs = {"TackleActivated", 9999999999.99}
-                                local TackleRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
-                                    :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
-                                    :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
-                                    :WaitForChild("RF"):WaitForChild("PerformActionThenGet")
-                                TackleRF:InvokeServer(unpack(tackleArgs))
-                                TackleRF:InvokeServer(unpack(tackleArgs))
-                                TackleRF:InvokeServer(unpack(tackleArgs))
-
-                                character:PivotTo(currentCFrame)
-                            end
-                        end
+                        -- AutoGetBall ve AutoShoot
+                        pcall(function()
+                            TsurenModule.TrueAutoGetBall()
+                        end)
 
                         if HasBall() then
-            pcall(function()
-                TsurenModule.TrueAutoShoot()
-            end)
-        end
-    end
-
-    task.wait(0.2)
+                            pcall(function()
+                                TsurenModule.TrueAutoShoot()
+                            end)
                         end
-
-             pcall(function()
-            TsurenModule.TrueAutoGetBall()
-        end)
 
                         -- Goal hitbox aç/kapa
                         for _, pl in pairs(game.Players:GetPlayers()) do
                             if pl.Team ~= player.Team and pl.Team ~= nil then
-                                local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Teams") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
+                                local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
                                 if enemyGoal and enemyGoal:FindFirstChild("Goal") and enemyGoal.Goal:FindFirstChild("Hitbox") then
                                     enemyGoal.Goal.Hitbox.Size = Vector3.new(800,50,800)
                                     task.wait(0.2)
@@ -302,8 +322,7 @@ MainTab:CreateToggle({
                             end
                         end
                     end
-
-                    task.wait(0.3)
+                    task.wait(0.2)
                 end
 
                 -- Toggle kapatıldığında hitbox'u sıfırla
