@@ -196,27 +196,17 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
---================ MAIN TAB (TSURENMODULE FULL FIX) =================
-local tMain = Window:CreateTab("Main", "layers")
+-- =========================
+-- MAIN TAB (AutoFarm) TSURENMODULE
+-- =========================
+local MainTab = Window:CreateTab("Main")
 
--- AutoFarm toggle ve cooldown
+-- Toggle değişkeni
 local AutoFarmEnabled = false
-local AutoFarmCooldown = 0.5 -- default cooldown
-
--- Farm cooldown slider
-tMain:CreateSlider({
-    Name = "Farm Cooldown (sec)",
-    Range = {0.3, 2},
-    Increment = 0.05,
-    CurrentValue = AutoFarmCooldown,
-    Callback = function(v)
-        AutoFarmCooldown = v
-    end
-})
 
 -- AutoFarm toggle
-tMain:CreateToggle({
-    Name = "AutoFarm Aç/Kapa (TsurenModule)",
+MainTab:CreateToggle({
+    Name = "AutoFarm",
     CurrentValue = false,
     Flag = "AutoFarmToggle",
     Callback = function(state)
@@ -225,85 +215,35 @@ tMain:CreateToggle({
             spawn(function()
                 while AutoFarmEnabled do
                     local player = game.Players.LocalPlayer
-                    local char = player.Character
+                    local character = player.Character
 
-                    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Hitbox") then
-                        local hrp = char.HumanoidRootPart
-                        local hitbox = char.Hitbox
-
+                    if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
                         -- Hitbox'u büyüt
-                        hitbox.Size = Vector3.new(500,50,500)
+                        character.Hitbox.Size = Vector3.new(500,50,500)
 
                         -- Saha üstüne teleport
+                        local offset = Vector3.new(0,20,0)
                         if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
-                            hrp.CFrame = workspace.Stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
+                            character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        -- AutoGetBall
-                        pcall(TsurenModule.TrueAutoGetBall)
-
-                        -- AutoFarm + AutoShoot (artık shoot çalışacak)
-                        for _, enemy in pairs(game.Players:GetPlayers()) do
-                            if enemy.Team ~= player.Team and enemy.Team ~= nil then
-                                local goal = workspace.Stadium.Teams[enemy.Team.Name].Goal
-                                if goal then
-                                    -- Hitbox büyüt
-                                    goal.Hitbox.Size = Vector3.new(800,50,800)
-                                    task.wait(0.2)
-                                    
-                                    -- Topu bul
-                                    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
-                                    if ball then
-                                        local args = {
-                                            "ShotActivated",
-                                            ball,
-                                            Vector3.new(goal.Position.X, goal.Position.Y + 3, goal.Position.Z), -- hedef gol merkezi
-                                            (goal.Position - ball.Position).Unit * 50 -- yön ve güç
-                                        }
-                                        local RF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
-                                            :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
-                                            :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
-                                            :WaitForChild("RE"):WaitForChild("PerformAction")
-                                        RF:FireServer(unpack(args))
-                                    end
-                                    
-                                    -- Hitbox eski hâle
-                                    goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
-                                end
-                            end
-                        end
+                        -- AutoFarm ve AutoGetBall
+                        pcall(function()
+                            TsurenModule.TrueAutoGetBall()
+                            TsurenModule.TrueAutoFarm()
+                        end)
                     end
-                    task.wait(AutoFarmCooldown)
+                    task.wait(0.5) -- performans cooldown
                 end
 
-                -- Toggle kapatıldığında hitbox resetle
-                local char = game.Players.LocalPlayer.Character
-                if char and char:FindFirstChild("Hitbox") then
-                    char.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
+                -- Toggle kapatıldığında hitbox'u sıfırla
+                local character = game.Players.LocalPlayer.Character
+                if character and character:FindFirstChild("Hitbox") then
+                    character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
                 end
             end)
         end
-    end
-})
-
--- Freeze Ball toggle (opsiyonel)
-local FreezeBall = false
-tMain:CreateToggle({
-    Name = "Freeze Ball",
-    CurrentValue = false,
-    Callback = function(state)
-        FreezeBall = state
-        spawn(function()
-            while FreezeBall do
-                local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
-                if ball then
-                    ball.AssemblyLinearVelocity = Vector3.zero
-                    ball.AssemblyAngularVelocity = Vector3.zero
-                end
-                task.wait(0.1)
-            end
-        end)
-    end
+    end,
 })
 
 --================ PLAYERS TAB =================
