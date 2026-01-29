@@ -196,23 +196,108 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
---================ MAIN TAB =================
+--================ MAIN TAB (FULL TSUREN) =================
 local tMain = Window:CreateTab("Main", "layers")
-local autoFarmEnabled = false
-local autoFarmCooldown = 0.6
-local lastFarmTick = 0
 
-tMain:CreateToggle({Name = "Auto Farm (Safe)", CurrentValue=false, Callback=function(v) autoFarmEnabled=v end})
-tMain:CreateSlider({Name = "Farm Cooldown (sec)", Range={0.3,2}, Increment=0.05, CurrentValue=autoFarmCooldown, Callback=function(v) autoFarmCooldown=v end})
+-- AutoFarm toggle ve cooldown
+local AutoFarmEnabled = false
+local AutoFarmCooldown = 0.5 -- default cooldown
 
-local function isBallMine(ball)
-    if not ball then return false end
-    local ok, owner = pcall(function() return ball:GetNetworkOwner() end)
-    if ok and owner == LocalPlayer then return true end
-    local hrp = GetHRP()
-    if hrp and (ball.Position - hrp.Position).Magnitude < 6 then return true end
-    return false
-end
+-- Cooldown slider
+tMain:CreateSlider({
+    Name = "Farm Cooldown (sec)",
+    Range = {0.3, 2},
+    Increment = 0.05,
+    CurrentValue = AutoFarmCooldown,
+    Callback = function(v)
+        AutoFarmCooldown = v
+    end
+})
+
+-- AutoFarm toggle
+tMain:CreateToggle({
+    Name = "AutoFarm Aç/Kapa (TsurenModule)",
+    CurrentValue = false,
+    Flag = "AutoFarmToggle",
+    Callback = function(state)
+        AutoFarmEnabled = state
+        if state then
+            spawn(function()
+                while AutoFarmEnabled do
+                    local player = game.Players.LocalPlayer
+                    local char = player.Character
+
+                    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Hitbox") then
+                        local hrp = char.HumanoidRootPart
+                        local hitbox = char.Hitbox
+
+                        -- Hitbox'u büyüt
+                        hitbox.Size = Vector3.new(500,50,500)
+
+                        -- Saha üstüne teleport
+                        if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
+                            hrp.CFrame = workspace.Stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
+                        end
+
+                        -- AutoFarm ve AutoGetBall + AutoShoot
+                        pcall(function()
+                            TsurenModule.TrueAutoGetBall()
+                            TsurenModule.TrueAutoFarm()
+                        end)
+                    end
+
+                    task.wait(AutoFarmCooldown)
+                end
+
+                -- Toggle kapatıldığında hitbox resetle
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChild("Hitbox") then
+                    char.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
+                end
+            end)
+        end
+    end
+})
+
+-- Ekstra: Goal Hitbox toggle (Opsiyonel ama TsurenModule destekli)
+local GoalHitboxEnabled = false
+tMain:CreateToggle({
+    Name = "Goal Hitbox Genişlet",
+    CurrentValue = false,
+    Callback = function(state)
+        GoalHitboxEnabled = state
+        spawn(function()
+            while GoalHitboxEnabled do
+                pcall(function()
+                    TsurenModule.TrueGoalHitbox(800,50,800)
+                end)
+                task.wait(0.5)
+            end
+            -- kapatınca eski boyuta döndür
+            pcall(TsurenModule.FalseGoalHitbox)
+        end)
+    end
+})
+
+-- Extra: Ball Freeze Toggle
+local FreezeBall = false
+tMain:CreateToggle({
+    Name = "Freeze Ball",
+    CurrentValue = false,
+    Callback = function(state)
+        FreezeBall = state
+        spawn(function()
+            while FreezeBall do
+                local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+                if ball then
+                    ball.AssemblyLinearVelocity = Vector3.zero
+                    ball.AssemblyAngularVelocity = Vector3.zero
+                end
+                task.wait(0.1)
+            end
+        end)
+    end
+})
 
 --================ PLAYERS TAB =================
 local tPlayers = Window:CreateTab("Players", "users")
