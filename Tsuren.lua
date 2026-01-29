@@ -191,15 +191,26 @@ local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."}
 
 local MainTab = Window:CreateTab("Main")
 
--- Toggle değişkeni
-local AutoFarmEnabled = false
 
--- Helper: Top elimizde mi veya yakın mı?
+local AutoFarmEnabled = false
 local function HasBall()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
-    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local player = game.Players.LocalPlayer
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not ball or not hrp then return false end
-    return (ball.Position - hrp.Position).Magnitude < 6
+
+    -- Topun network owner biz miyiz?
+    local ok, owner = pcall(function() return ball:GetNetworkOwner() end)
+    if ok and owner == player then
+        return true
+    end
+
+    -- Yakınlık kontrolü (opsiyonel)
+    if (ball.Position - hrp.Position).Magnitude < 6 then
+        return true
+    end
+
+    return false
 end
 
 -- Topa otomatik shoot
@@ -222,7 +233,7 @@ local function AutoShoot()
     ActionService:FireServer(unpack(args))
 end
 
--- AutoFarm toggle
+
 MainTab:CreateToggle({
     Name = "AutoFarm Aç/Kapa",
     CurrentValue = false,
@@ -236,16 +247,16 @@ MainTab:CreateToggle({
                     local character = player.Character
 
                     if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
-                        -- Hitbox'u büyüt
+                        
                         character.Hitbox.Size = Vector3.new(500,50,500)
 
-                        -- Saha üstüne teleport
+                        
                         local offset = Vector3.new(0,20,0)
                         if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
                             character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        -- Topa yaklaşınca al ve shoot
+                        
                         for _, p in pairs(game.Players:GetPlayers()) do
                             if p:GetAttribute("HasBall", false) and p.Team ~= player.Team and p:GetAttribute("TeamPosition") ~= "GK" then
                                 local currentCFrame = character.HumanoidRootPart.CFrame
