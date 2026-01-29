@@ -189,20 +189,37 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
--- =========================
--- MAIN TAB (AutoFarm) TSURENMODULE
--- =========================
 local MainTab = Window:CreateTab("Main")
 
 -- Toggle değişkeni
 local AutoFarmEnabled = false
 
--- Helper: Top elimizde mi?
+-- Helper: Top elimizde mi veya yakın mı?
 local function HasBall()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not ball or not hrp then return false end
     return (ball.Position - hrp.Position).Magnitude < 6
+end
+
+-- Topa otomatik shoot
+local function AutoShoot()
+    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+    if not ball then return end
+
+    local args = {
+        "ShotActivated",
+        ball,
+        Vector3.new(ball.Position.X, ball.Position.Y, ball.Position.Z),
+        Vector3.new(ball.Position.X + 5, ball.Position.Y + 1, ball.Position.Z + 5)
+    }
+
+    local ActionService = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+        :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+        :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+        :WaitForChild("RE"):WaitForChild("PerformAction")
+
+    ActionService:FireServer(unpack(args))
 end
 
 -- AutoFarm toggle
@@ -228,24 +245,45 @@ MainTab:CreateToggle({
                             character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        -- AutoGetBall ve AutoFarm
-                        pcall(function()
-                            TsurenModule.TrueAutoGetBall()
-                        end)
+                        -- Topa yaklaşınca al ve shoot
+                        for _, p in pairs(game.Players:GetPlayers()) do
+                            if p:GetAttribute("HasBall", false) and p.Team ~= player.Team and p:GetAttribute("TeamPosition") ~= "GK" then
+                                local currentCFrame = character.HumanoidRootPart.CFrame
+                                character:PivotTo(p.Character.HumanoidRootPart.CFrame)
 
-                        -- Eğer top elimizdeyse veya topa yakınsak hemen shoot at
-                        if HasBall() then
-                            pcall(function()
-                                TsurenModule.TrueAutoShoot()
-                            end)
+                                -- Tackle
+                                local tackleArgs = {"TackleActivated", 9999999999.99}
+                                local TackleRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+                                    :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+                                    :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+                                    :WaitForChild("RF"):WaitForChild("PerformActionThenGet")
+                                TackleRF:InvokeServer(unpack(tackleArgs))
+                                TackleRF:InvokeServer(unpack(tackleArgs))
+                                TackleRF:InvokeServer(unpack(tackleArgs))
+
+                                character:PivotTo(currentCFrame)
+                            end
                         end
 
-                        -- Full AutoFarm (goal açıp kapama)
-                        pcall(function()
-                            TsurenModule.TrueAutoFarm()
-                        end)
+                        -- AutoShoot
+                        if HasBall() then
+                            AutoShoot()
+                        end
+
+                        -- Goal hitbox aç/kapa
+                        for _, pl in pairs(game.Players:GetPlayers()) do
+                            if pl.Team ~= player.Team and pl.Team ~= nil then
+                                local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Teams") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
+                                if enemyGoal and enemyGoal:FindFirstChild("Goal") and enemyGoal.Goal:FindFirstChild("Hitbox") then
+                                    enemyGoal.Goal.Hitbox.Size = Vector3.new(800,50,800)
+                                    task.wait(0.2)
+                                    enemyGoal.Goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
+                                end
+                            end
+                        end
                     end
-                    task.wait(0.3) -- performans cooldown
+
+                    task.wait(0.3)
                 end
 
                 -- Toggle kapatıldığında hitbox'u sıfırla
@@ -257,7 +295,6 @@ MainTab:CreateToggle({
         end
     end,
 })
-
 
 local tPlayers = Window:CreateTab("Players", "users")
 local fpsEnabled = false
