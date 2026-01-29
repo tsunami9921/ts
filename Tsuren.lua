@@ -1,6 +1,5 @@
 -- Maded by Tsubasa
 
--- SERVICES
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
@@ -12,7 +11,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
--- RAYFIELD
+
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS",
@@ -50,9 +49,9 @@ end
 --================ HOTKEY CONTROLLER (FULL) =================
 
 local Hotkeys = {
-    Fly = Enum.KeyCode.F,           -- Fly Aç / Kapat
-    AutoFarm = Enum.KeyCode.G,      -- Auto Farm Aç / Kapat
-    Reach = Enum.KeyCode.R           -- Reach Aç / Kapat
+    Fly = Enum.KeyCode.F,           
+    AutoFarm = Enum.KeyCode.G,      
+    Reach = Enum.KeyCode.R           
 }
 
 local States = {
@@ -67,7 +66,7 @@ local HotkeyEvents = {
     Reach = Instance.new("BindableEvent")
 }
 
--- Genel Hotkey Connect
+
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
 
@@ -85,8 +84,7 @@ UIS.InputBegan:Connect(function(input, gp)
         end
     end
 
-    -- Diğer Hotkeyler
-    -- Bring Ball
+    
     if input.KeyCode == Enum.KeyCode.B then
         local ball, hrp = GetBall(), GetHRP()
         if ball and hrp then
@@ -95,8 +93,7 @@ UIS.InputBegan:Connect(function(input, gp)
         end
     end
 
-    -- Freeze Ball
-    if input.KeyCode == Enum.KeyCode.N then
+     if input.KeyCode == Enum.KeyCode.N then
         freezeBall = not freezeBall
         Rayfield:Notify({
             Title="Freeze Ball",
@@ -105,40 +102,36 @@ UIS.InputBegan:Connect(function(input, gp)
         })
     end
 
-    -- Home Goal Hitbox
+    
     if input.KeyCode == Enum.KeyCode.H then
         goalEnabledHome = not goalEnabledHome
         applyGoal("Home", goalEnabledHome)
     end
 
-    -- Away Goal Hitbox
     if input.KeyCode == Enum.KeyCode.J then
         goalEnabledAway = not goalEnabledAway
         applyGoal("Away", goalEnabledAway)
     end
 
-    -- Through Barriers
+    
     if input.KeyCode == Enum.KeyCode.K then
         charThrough = not charThrough
         updateCollision()
         setBarriersCollision(charThrough)
     end
 
-    -- Infinite Stamina
+    
     if input.KeyCode == Enum.KeyCode.L and StaminaController then
         staminaOn = not staminaOn
         StaminaController.HasInfiniteStamina:set(staminaOn)
     end
 
-    -- FPS Toggle
+    
     if input.KeyCode == Enum.KeyCode.P then
         setFPS(not fpsEnabled)
     end
 end)
 
---================ HOTKEY EVENTS CONNECT =================
-
--- Fly Event
 HotkeyEvents.Fly.Event:Connect(function(v)
     flyEnabled = v
     if v then startFly() else stopFly() end
@@ -204,9 +197,17 @@ local MainTab = Window:CreateTab("Main")
 -- Toggle değişkeni
 local AutoFarmEnabled = false
 
+-- Helper: Top elimizde mi?
+local function HasBall()
+    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not ball or not hrp then return false end
+    return (ball.Position - hrp.Position).Magnitude < 6
+end
+
 -- AutoFarm toggle
 MainTab:CreateToggle({
-    Name = "AutoFarm",
+    Name = "AutoFarm Aç/Kapa",
     CurrentValue = false,
     Flag = "AutoFarmToggle",
     Callback = function(state)
@@ -227,13 +228,24 @@ MainTab:CreateToggle({
                             character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        -- AutoFarm ve AutoGetBall
+                        -- AutoGetBall ve AutoFarm
                         pcall(function()
                             TsurenModule.TrueAutoGetBall()
+                        end)
+
+                        -- Eğer top elimizdeyse veya topa yakınsak hemen shoot at
+                        if HasBall() then
+                            pcall(function()
+                                TsurenModule.TrueAutoShoot()
+                            end)
+                        end
+
+                        -- Full AutoFarm (goal açıp kapama)
+                        pcall(function()
                             TsurenModule.TrueAutoFarm()
                         end)
                     end
-                    task.wait(0.5) -- performans cooldown
+                    task.wait(0.3) -- performans cooldown
                 end
 
                 -- Toggle kapatıldığında hitbox'u sıfırla
@@ -246,7 +258,7 @@ MainTab:CreateToggle({
     end,
 })
 
---================ PLAYERS TAB =================
+
 local tPlayers = Window:CreateTab("Players", "users")
 local fpsEnabled = false
 local fpsLabel
