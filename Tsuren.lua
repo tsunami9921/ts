@@ -352,6 +352,7 @@ MainTab:CreateToggle({
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -369,13 +370,17 @@ local ActionRF = ReplicatedStorage
     :WaitForChild("PerformActionThenGet")
 
 -- =========================
--- BRING BALL CORE
+-- CORE
 -- =========================
 local BringBallEnabled = false
 local BringBallConnection
 
 local function GetCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local function GetBall()
+    return Workspace:FindFirstChild("Misc") and Workspace.Misc:FindFirstChild("Football")
 end
 
 local function EnemyHasBall(plr)
@@ -391,24 +396,39 @@ end
 local function BringBallStep()
     local character = GetCharacter()
     local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local hitbox = character:FindFirstChild("Hitbox")
+    if not hrp or not hitbox then return end
+
+    local ball = GetBall()
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if EnemyHasBall(plr) then
             local oldCF = hrp.CFrame
 
-            -- Rakibe ışınlan
             hrp.CFrame = plr.Character.HumanoidRootPart.CFrame
 
-            -- GLOBAL tackle spam (ownership alır)
             for i = 1, 5 do
-                ActionRF:InvokeServer("TackleActivated", 9999999999)
+                ActionRF:InvokeServer("TackleActivated", 999999999)
             end
 
-            -- Geri dön
             hrp.CFrame = oldCF
-            break
+            return
         end
+    end
+
+    if ball and (ball.Position - hrp.Position).Magnitude > 5 then
+        local oldCF = hrp.CFrame
+
+        -- Hitbox büyüt → global catch
+        hitbox.Size = Vector3.new(500, 50, 500)
+
+        -- Topa ışınlan
+        hrp.CFrame = ball.CFrame + Vector3.new(0, 2, 0)
+
+        task.wait(0.05)
+
+        -- Eski yerine dön
+        hrp.CFrame = oldCF
     end
 end
 
@@ -430,6 +450,12 @@ MainTab:CreateToggle({
             if BringBallConnection then
                 BringBallConnection:Disconnect()
                 BringBallConnection = nil
+            end
+
+            -- hitbox reset
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Hitbox") then
+                char.Hitbox.Size = Vector3.new(4.521, 5.73, 2.398)
             end
         end
     end,
