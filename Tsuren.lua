@@ -512,7 +512,6 @@ spawn(function()
     end
 end)
 
--- UI Toggle
 MainTab:CreateToggle({
     Name = "Bring Ball",
     CurrentValue = false,
@@ -527,6 +526,20 @@ MainTab:CreateToggle({
             hitbox.Size = Vector3.new(500,50,50)
         else
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
+                -- Anti-AFK Toggle
+       MainTab:CreateToggle({
+       Name = "Anti-AFK",
+    CurrentValue = true,
+    Flag = "AntiAFKToggle",
+    Callback = function(state)
+        if state then
+            -- Anti-AFK aktif
+            local vu = game:GetService("VirtualUser")
+            game:GetService("Players").LocalPlayer.Idled:Connect(function()
+                vu:CaptureController()
+                vu:ClickButton2(Vector2.new())
+            end)
+         else
         end
     end,
 })
