@@ -528,8 +528,6 @@ MainTab:CreateToggle({
         else
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
-    end,
-})
 
 -- Anti-AFK Toggle (bağımsız)
 MainTab:CreateToggle({
