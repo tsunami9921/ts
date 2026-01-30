@@ -47,35 +47,21 @@ local function getGoal(team)
 end
 
 -- TeamModule
-TeamModule = {}
-function TeamModule.JoinRandomTeam()
-    local Players = game:GetService("Players")
-    local RepStorage = game:GetService("ReplicatedStorage")
-    local Teams = game:GetService("Teams")
-    local LocalPlayer = Players.LocalPlayer
+--local TeamModule = {}
+--do
+   -- local ReplicatedStorage = game:GetService("ReplicatedStorage")
+   -- local TeamsService = game:GetService("Teams")
+    --local LocalPlayer = game.Players.LocalPlayer
 
-    if LocalPlayer.Team ~= nil then return end -- Zaten takımda ise çık
+    
+        --local teamList = {TeamsService:WaitForChild("Home"), TeamsService:WaitForChild("Away")}
+        --local randomTeam = teamList[math.random(1, #teamList)]
 
-    local allTeams = {}
-    for _, t in pairs(Teams:GetChildren()) do
-        if t:IsA("Team") then
-            table.insert(allTeams, t)
-        end
-    end
-
-    if #allTeams == 0 then return end
-
-    local chosenTeam = allTeams[math.random(1, #allTeams)]
-
-    local joinRemote = RepStorage:WaitForChild("__GamemodeComm"):WaitForChild("RE"):WaitForChild("_RequestJoin")
-    for i = 1, 3 do
-        pcall(function()
-            joinRemote:FireServer(joinRemote)
-        end)
-        task.wait(0.1)
-    end
-end
-
+        -- ReplicatedStorage üzerinden Join isteği
+        --local RE = ReplicatedStorage:WaitForChild("__GamemodeComm"):WaitForChild("RE"):WaitForChild("_RequestJoin")
+        -- RE:FireServer(randomTeam)
+    -- end
+-- end
 
 local Hotkeys = {
     Fly = Enum.KeyCode.F,           
@@ -303,9 +289,25 @@ end
 
 local MainTab = Window:CreateTab("Main","layers")
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+-- Varsayılan değişkenler
+local AutoFarmEnabled = false
+local LocalPlayer = game.Players.LocalPlayer
 
+-- TeamModule
+local TeamModule = {}
+do
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TeamsService = game:GetService("Teams")
+
+    function TeamModule.JoinRandomTeam()
+        local teamList = {TeamsService:WaitForChild("Home"), TeamsService:WaitForChild("Away")}
+        local randomTeam = teamList[math.random(1, #teamList)]
+        local RE = ReplicatedStorage:WaitForChild("__GamemodeComm"):WaitForChild("RE"):WaitForChild("_RequestJoin")
+        RE:FireServer(randomTeam)
+    end
+end
+
+-- AutoFarm toggle
 MainTab:CreateToggle({
     Name = "AutoFarm (Beta)",
     CurrentValue = false,
@@ -314,25 +316,29 @@ MainTab:CreateToggle({
         AutoFarmEnabled = state
 
         if state then
+            -- Takım kontrolü
             spawn(function()
                 while AutoFarmEnabled do
-                    local player = LocalPlayer
-                    local character = player.Character
+                    if not LocalPlayer.Team then
+                        TeamModule.JoinRandomTeam()
+                        task.wait(0.5)
+                    end
+                    task.wait(1)
+                end
+            end)
+
+            -- AutoFarm ana döngüsü
+            spawn(function()
+                while AutoFarmEnabled do
+                    local character = LocalPlayer.Character
                     local hrp = character and character:FindFirstChild("HumanoidRootPart")
                     local hitbox = character and character:FindFirstChild("Hitbox")
 
-                    -- Takım yoksa rastgele takıma gir
-                    if not player.Team then
-                        TeamModule.JoinRandomTeam()
-                        task.wait(0.5) -- Takım seçimi için kısa bekleme
-                    end
-
-                    -- Eğer karakter hazırsa AutoFarm işlemleri
                     if character and hrp and hitbox then
                         -- Hitbox büyüt
                         hitbox.Size = Vector3.new(500,50,500)
 
-                        -- Field'e teleport
+                        -- Teleport field
                         local stadium = workspace:FindFirstChild("Stadium")
                         if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
                             hrp.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
@@ -354,7 +360,7 @@ MainTab:CreateToggle({
                     task.wait(0.2)
                 end
 
-                -- Toggle kapatıldığında hitbox'u sıfırla
+                -- Toggle kapatıldığında hitbox resetle
                 local character = LocalPlayer.Character
                 if character and character:FindFirstChild("Hitbox") then
                     character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
