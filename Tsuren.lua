@@ -293,7 +293,6 @@ local MainTab = Window:CreateTab("Main","layers")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local CoreGui = game:GetService("CoreGui")
 
 -- Modules
 local TsurenModule = TsurenModule -- yukarda zaten var
@@ -301,7 +300,7 @@ local TsurenModule = TsurenModule -- yukarda zaten var
 -- AutoFarm state
 local AutoFarmEnabled = false
 
--- CoreGui Notification Helper
+-- Notification Helper (CoreGui)
 local function SendNotification(title, text, duration)
     duration = duration or 3
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -327,8 +326,48 @@ local function GetBallHolder()
     return nil
 end
 
+-- AutoShoot fix: top pozisyonuna göre
+local function AutoShoot()
+    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+    if not ball then return end
+
+    local goalPos
+    for _, pl in pairs(Players:GetPlayers()) do
+        if pl.Team ~= LocalPlayer.Team and pl.Team ~= nil then
+            local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
+            if enemyGoal and enemyGoal:FindFirstChild("Goal") then
+                goalPos = enemyGoal.Goal.Position
+                break
+            end
+        end
+    end
+    if not goalPos then return end
+
+    local args = {
+        "ShotActivated",
+        ball,
+        ball.Position,
+        goalPos + Vector3.new(0,5,0) -- biraz yukarıdan
+    }
+
+    local ActionService = ReplicatedStorage:WaitForChild("Packages")
+        :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+        :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+        :WaitForChild("RE"):WaitForChild("PerformAction")
+
+    pcall(function()
+        ActionService:FireServer(unpack(args))
+    end)
+end
+
 -- Main AutoFarm loop
 local function StartAutoFarm()
+    -- Team kontrol
+    if not LocalPlayer.Team then
+        SendNotification("Auto Farm", "Join a Team First!", 3)
+        return
+    end
+
     SendNotification("Auto Farm", "Auto Farm Started!", 3)
 
     spawn(function()
@@ -348,8 +387,8 @@ local function StartAutoFarm()
                 local ballHolder = GetBallHolder()
 
                 if HasBall() then
-                    -- Top bizdeyse shoot
-                    pcall(TsurenModule.TrueAutoShoot)
+                    -- Top bizdeyse auto shoot
+                    pcall(AutoShoot)
                 elseif ballHolder then
                     -- Rakipteyse teleport + tackle
                     if ballHolder.Character and ballHolder.Character:FindFirstChild("HumanoidRootPart") then
@@ -359,8 +398,8 @@ local function StartAutoFarm()
                         character:PivotTo(originalCFrame)
                     end
                 else
-                    -- Top boşta ise kaleye shoot
-                    pcall(TsurenModule.TrueAutoShoot)
+                    -- Top boşta → kale shoot
+                    pcall(AutoShoot)
                 end
 
                 -- Enemy goal hitbox büyüt
@@ -375,7 +414,6 @@ local function StartAutoFarm()
                     end
                 end
             end
-
             task.wait(0.2)
         end
 
@@ -397,7 +435,6 @@ MainTab:CreateToggle({
     Callback = function(state)
         AutoFarmEnabled = state
         if AutoFarmEnabled then
-            SendNotification("Auto Farm", "Starting Auto Farm...", 3)
             StartAutoFarm()
         end
     end,
