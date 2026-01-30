@@ -354,12 +354,12 @@ local BringBallEnabled = false
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Helper function: get character safely
+-- Saf karakter alma
 local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 end
 
--- Check if any player has the ball
+-- Rakip oyuncu topa sahip mi kontrol
 local function PlayerHasBall()
     for _, p in pairs(Players:GetPlayers()) do
         if p:GetAttribute("HasBall", false) and p.Team ~= LocalPlayer.Team and p:GetAttribute("TeamPosition") ~= "GK" then
@@ -369,7 +369,7 @@ local function PlayerHasBall()
     return nil
 end
 
--- Check if local player has the ball
+-- Local player topa sahip mi
 local function LocalHasBall()
     local char = getCharacter()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
@@ -380,22 +380,23 @@ local function LocalHasBall()
     return false
 end
 
--- Main Bring Ball loop
+-- Loop başlat, ama toggle true olana kadar hiçbir şey yapma
 spawn(function()
     while true do
         task.wait(0.2)
-        if not BringBallEnabled then continue end
+
+        if not BringBallEnabled then continue end -- TOGGLE KAPALIYSA SKIP
 
         local char = getCharacter()
         if not char or not char:FindFirstChild("Hitbox") then continue end
 
-        -- Expand hitbox while enabled
+        -- Toggle açıkken hitbox büyüt
         char.Hitbox.Size = Vector3.new(500,50,500)
 
         local enemyWithBall = PlayerHasBall()
 
         if enemyWithBall then
-            -- If enemy has ball, tackle without teleporting
+            -- Rakip topa sahipse tackle (teleport yok)
             local currentCFrame = char.HumanoidRootPart.CFrame
             char:PivotTo(enemyWithBall.Character.HumanoidRootPart.CFrame)
 
@@ -412,7 +413,7 @@ spawn(function()
         end
 
         if LocalHasBall() then
-            -- If local player has ball, auto shoot
+            -- Bizdeyse shoot yap
             pcall(function()
                 TsurenModule.TrueAutoShoot()
             end)
@@ -430,8 +431,9 @@ MainTab:CreateToggle({
         local char = getCharacter()
         local hitbox = char:FindFirstChild("Hitbox")
         if not hitbox then return end
+
         if state then
-            hitbox.Size = Vector3.new(500,50,500)
+            hitbox.Size = Vector3.new(500,50,50)
         else
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
