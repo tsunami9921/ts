@@ -349,109 +349,91 @@ MainTab:CreateToggle({
     end,
 })
 
+-- Bring Ball Toggle
+local BringBallEnabled = false
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
 local LocalPlayer = Players.LocalPlayer
 
-local ActionRF = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_knit@1.7.0")
-    :WaitForChild("knit")
-    :WaitForChild("Services")
-    :WaitForChild("ActionService")
-    :WaitForChild("RF")
-    :WaitForChild("PerformActionThenGet")
-
-local function GetCharacter()
+-- Helper function: get character safely
+local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 end
 
-local function GetBall()
-    return Workspace:FindFirstChild("Misc") and Workspace.Misc:FindFirstChild("Football")
-end
-
-local function EnemyHasBall(plr)
-    return plr
-        and plr ~= LocalPlayer
-        and plr.Team ~= LocalPlayer.Team
-        and plr:GetAttribute("HasBall") == true
-        and plr:GetAttribute("TeamPosition") ~= "GK"
-        and plr.Character
-        and plr.Character:FindFirstChild("HumanoidRootPart")
-end
-
-local function BringBallStep()
-    local char = GetCharacter()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local hitbox = char:FindFirstChild("Hitbox")
-    if not hrp or not hitbox then return end
-
-    local ball = GetBall()
-
-    -- 1️⃣ Eğer top rakipteyse → teleport tackle
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if EnemyHasBall(plr) then
-            local oldCF = hrp.CFrame
-            hrp.CFrame = plr.Character.HumanoidRootPart.CFrame
-
-            for i = 1, 5 do
-                ActionRF:InvokeServer("TackleActivated", 999999999)
-            end
-
-            hrp.CFrame = oldCF
-            return
+-- Check if any player has the ball
+local function PlayerHasBall()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p:GetAttribute("HasBall", false) and p.Team ~= LocalPlayer.Team and p:GetAttribute("TeamPosition") ~= "GK" then
+            return p
         end
     end
-
-    -- 2️⃣ Top boştaysa → teleport yok, top bize gelsin
-    if ball then
-        hitbox.Size = Vector3.new(500, 50, 500)
-
-        local dir = (hrp.Position - ball.Position)
-        if dir.Magnitude < 60 then
-            -- topu bize doğru çekiyoruz
-            ball.AssemblyLinearVelocity = dir.Unit * 120
-        end
-    end
+    return nil
 end
 
+-- Check if local player has the ball
+local function LocalHasBall()
+    local char = getCharacter()
+    local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
+    if not ball or not char or not char:FindFirstChild("HumanoidRootPart") then return false end
+    local ok, owner = pcall(function() return ball:GetNetworkOwner() end)
+    if ok and owner == LocalPlayer then return true end
+    if (ball.Position - char.HumanoidRootPart.Position).Magnitude < 6 then return true end
+    return false
+end
 
-local BringBallEnabled = true
-RunService.Heartbeat:Connect(function()
-    if BringBallEnabled then
-        pcall(BringBallStep)
+-- Main Bring Ball loop
+spawn(function()
+    while true do
+        task.wait(0.2)
+        if not BringBallEnabled then continue end
+
+        local char = getCharacter()
+        if not char or not char:FindFirstChild("Hitbox") then continue end
+
+        -- Expand hitbox while enabled
+        char.Hitbox.Size = Vector3.new(500,50,500)
+
+        local enemyWithBall = PlayerHasBall()
+
+        if enemyWithBall then
+            -- If enemy has ball, tackle without teleporting
+            local currentCFrame = char.HumanoidRootPart.CFrame
+            char:PivotTo(enemyWithBall.Character.HumanoidRootPart.CFrame)
+
+            local tackleArgs = {"TackleActivated", 9999999999.99}
+            local TackleRF = game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+                :WaitForChild("_Index"):WaitForChild("sleitnick_knit@1.7.0")
+                :WaitForChild("knit"):WaitForChild("Services"):WaitForChild("ActionService")
+                :WaitForChild("RF"):WaitForChild("PerformActionThenGet")
+            TackleRF:InvokeServer(unpack(tackleArgs))
+            TackleRF:InvokeServer(unpack(tackleArgs))
+            TackleRF:InvokeServer(unpack(tackleArgs))
+
+            char:PivotTo(currentCFrame)
+        end
+
+        if LocalHasBall() then
+            -- If local player has ball, auto shoot
+            pcall(function()
+                TsurenModule.TrueAutoShoot()
+            end)
+        end
     end
 end)
 
--- =========================
--- UI TOGGLE
--- =========================
+-- UI Toggle
 MainTab:CreateToggle({
     Name = "Bring Ball",
     CurrentValue = false,
     Flag = "BringBallToggle",
     Callback = function(state)
         BringBallEnabled = state
-
+        local char = getCharacter()
+        local hitbox = char:FindFirstChild("Hitbox")
+        if not hitbox then return end
         if state then
-            BringBallConnection = RunService.Heartbeat:Connect(function()
-                pcall(BringBallStep)
-            end)
+            hitbox.Size = Vector3.new(500,50,500)
         else
-            if BringBallConnection then
-                BringBallConnection:Disconnect()
-                BringBallConnection = nil
-            end
-
-            -- hitbox reset
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("Hitbox") then
-                char.Hitbox.Size = Vector3.new(4.521, 5.73, 2.398)
-            end
+            hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
     end,
 })
