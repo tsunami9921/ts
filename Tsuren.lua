@@ -288,16 +288,18 @@ local function HasBall()
 end
 
 local MainTab = Window:CreateTab("Main","layers")
+
 -- References
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Modules
-local TsurenModule = require(script:WaitForChild("TsurenModule")) -- Senin verdiğin modül
 local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
 local NotificationService = Knit.GetService("NotificationService")
+
+-- TsurenModule zaten yukarıda tanımlı
+-- local TsurenModule = {} -- senin verdiğin modül burada kullanılacak
 
 -- AutoFarm state
 local AutoFarmEnabled = false
@@ -321,7 +323,7 @@ end
 
 -- Main AutoFarm loop
 local function StartAutoFarm()
-    SendNotification("Auto Farm", "Starting Auto Farm...", "Info")
+    SendNotification("Auto Farm", "Auto Farm Starting...", "Info")
     
     spawn(function()
         while AutoFarmEnabled do
@@ -333,7 +335,6 @@ local function StartAutoFarm()
 
                 -- Topu al ve shoot
                 pcall(TsurenModule.TrueAutoGetBall)
-
                 if HasBall() then
                     pcall(TsurenModule.TrueAutoShoot)
                 end
@@ -370,19 +371,24 @@ MainTab:CreateToggle({
     Callback = function(state)
         AutoFarmEnabled = state
         if AutoFarmEnabled then
+            -- Başlangıç bildirimi
             SendNotification("Auto Farm", "Join Any Team for Auto Farm Start", "Info")
 
-            -- Eğer oyuncu takımda değilse kısa süre bekle ve notification gönder
+            -- Eğer oyuncu takımda değilse 1 saniye bekle ve notification gönder
             if not LocalPlayer.Team then
                 task.wait(1)
                 SendNotification("Auto Farm", "Auto Farm Starting...", "Info")
+            else
+                -- Takımda ise direkt başlat
+                SendNotification("Auto Farm", "Auto Farm Started!", "Success")
             end
 
             StartAutoFarm()
+        else
+            SendNotification("Auto Farm", "Auto Farm Stopped", "Error")
         end
     end,
 })
-
 -- Bring Ball Toggle
 local BringBallEnabled = false
 local Players = game:GetService("Players")
