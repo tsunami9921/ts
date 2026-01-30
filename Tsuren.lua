@@ -292,12 +292,11 @@ local MainTab = Window:CreateTab("Main","layers")
 -- References
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CoreGui = game:GetService("CoreGui")
 
 -- Modules
-local TsurenModule = TsurenModule -- Senin verdiğin modül zaten yukarda var
+local TsurenModule = TsurenModule -- yukarda zaten var
 
 -- AutoFarm state
 local AutoFarmEnabled = false
@@ -318,6 +317,16 @@ local function HasBall()
     return LocalPlayer:GetAttribute("HasBall") or false
 end
 
+-- Get player who has ball (rakip)
+local function GetBallHolder()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p:GetAttribute("HasBall") and p.Team ~= LocalPlayer.Team then
+            return p
+        end
+    end
+    return nil
+end
+
 -- Main AutoFarm loop
 local function StartAutoFarm()
     SendNotification("Auto Farm", "Auto Farm Started!", 3)
@@ -330,21 +339,28 @@ local function StartAutoFarm()
                 -- Hitbox büyüt
                 character.Hitbox.Size = Vector3.new(500,50,500)
 
-                -- Ortada havada tut
+                -- Orta noktada bekle
                 local stadium = workspace:FindFirstChild("Stadium")
                 if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
                     character.HumanoidRootPart.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
                 end
 
-                -- Topu al
-                pcall(TsurenModule.TrueAutoGetBall)
+                local ballHolder = GetBallHolder()
 
-                -- Top bizdeyse shoot
                 if HasBall() then
+                    -- Top bizdeyse shoot
                     pcall(TsurenModule.TrueAutoShoot)
+                elseif ballHolder then
+                    -- Rakipteyse teleport + tackle
+                    if ballHolder.Character and ballHolder.Character:FindFirstChild("HumanoidRootPart") then
+                        local originalCFrame = character.HumanoidRootPart.CFrame
+                        character:PivotTo(ballHolder.Character.HumanoidRootPart.CFrame + Vector3.new(0,0,0))
+                        pcall(TsurenModule.TrueAutoGetBall)
+                        character:PivotTo(originalCFrame)
+                    end
                 else
-                    -- Eğer top rakipteyse tackle ile al
-                    pcall(TsurenModule.TrueAutoGetBall)
+                    -- Top boşta ise kaleye shoot
+                    pcall(TsurenModule.TrueAutoShoot)
                 end
 
                 -- Enemy goal hitbox büyüt
