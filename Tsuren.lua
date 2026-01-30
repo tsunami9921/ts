@@ -20,7 +20,7 @@ local Window = Rayfield:CreateWindow({
     Theme = "Light"
 })
 
--- UTILS
+
 local function GetBall()
     local misc = Workspace:FindFirstChild("Misc")
     return misc and misc:FindFirstChild("Football")
@@ -330,6 +330,26 @@ MainTab:CreateToggle({
                 if character and character:FindFirstChild("Hitbox") then
                     character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
                 end
+
+        local BringBallEnabled = false
+        local LocalPlayer = game.Players.LocalPlayer
+
+MainTab:CreateToggle({
+    Name = "Bring Ball",
+    CurrentValue = false,
+    Flag = "BringBallToggle",
+    Callback = function(state)
+        BringBallEnabled = state
+
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("Hitbox") then return end
+
+        if state then
+            
+            char.Hitbox.Size = Vector3.new(500, 50, 500)
+        else
+            
+            char.Hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398
             end)
         end
     end,
@@ -365,14 +385,14 @@ local function setFPS(v)
     end
 end
 
--- Toggle UI
+
 tPlayers:CreateToggle({
     Name="Show FPS (F7)",
     CurrentValue=false,
     Callback=setFPS
 })
 
--- Keybind F7
+
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
     if input.KeyCode == Enum.KeyCode.F7 then
@@ -380,7 +400,7 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
--- Update FPS every frame
+
 RunService.RenderStepped:Connect(function(dt)
     if fpsEnabled and fpsLabel then
         local fps = math.floor(1/dt)
