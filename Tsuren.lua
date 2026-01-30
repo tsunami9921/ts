@@ -349,31 +349,61 @@ MainTab:CreateToggle({
     end,
 })
 
--- ======================
--- BRING BALL
--- ======================
-local BringBallEnabled = false
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local function getCharacter()
-    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local BringBallEnabled = false
+local BringConn
+
+local function getBall()
+    return workspace:FindFirstChild("Misc")
+        and workspace.Misc:FindFirstChild("Football")
+end
+
+local function getChar()
+    return LocalPlayer.Character
 end
 
 MainTab:CreateToggle({
-    Name = "Bring Ball",
+    Name = "Bring Ball (Beta)",
     CurrentValue = false,
-    Flag = "BringBallToggle",
+    Flag = "BringBallFast",
     Callback = function(state)
         BringBallEnabled = state
 
-        local char = getCharacter()
-        local hitbox = char:FindFirstChild("Hitbox")
-        if not hitbox then return end
-
-        if state then
-            hitbox.Size = Vector3.new(500,50,500)
-        else
-            hitbox.Size = Vector3.new(4.5209999,5.73,2.398)
+        if BringConn then
+            BringConn:Disconnect()
+            BringConn = nil
         end
+
+        if not state then return end
+
+        BringConn = RunService.Heartbeat:Connect(function()
+            if not BringBallEnabled then return end
+
+            local char = getChar()
+            local ball = getBall()
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local hitbox = char and char:FindFirstChild("Hitbox")
+
+            if not char or not hrp or not hitbox or not ball then return end
+
+            -- Hitbox sürekli açık
+            hitbox.Size = Vector3.new(500,50,500)
+
+            -- Top BOŞSA → ÇEK
+            local owner
+            pcall(function()
+                owner = ball:GetNetworkOwner()
+            end)
+
+            if owner == nil then
+                -- Topu direkt önümüze çek
+                ball.CFrame = hrp.CFrame * CFrame.new(0,0,-2)
+                ball.AssemblyLinearVelocity = Vector3.zero
+            end
+        end)
     end,
 })
                         
