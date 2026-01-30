@@ -328,8 +328,13 @@ MainTab:CreateToggle({
                     character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
                 end
 
-        local BringBallEnabled = false
-        local LocalPlayer = game.Players.LocalPlayer
+local BringBallEnabled = false
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function getCharacter()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
 
 MainTab:CreateToggle({
     Name = "Bring Ball",
@@ -338,20 +343,20 @@ MainTab:CreateToggle({
     Callback = function(state)
         BringBallEnabled = state
 
-        local char = LocalPlayer.Character
-        if not char or not char:FindFirstChild("Hitbox") then return end
+        local char = getCharacter()
+        local hitbox = char:FindFirstChild("Hitbox")
+        if not hitbox then return end
 
         if state then
-            
-            char.Hitbox.Size = Vector3.new(500, 50, 500)
+            -- ENABLE
+            hitbox.Size = Vector3.new(500, 50, 500)
         else
-            
-            char.Hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
-            end)
+            -- DISABLE
+            hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
     end,
 })
-
+                        
 local tPlayers = Window:CreateTab("Players", "users")
 local fpsEnabled = false
 local fpsLabel
