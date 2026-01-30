@@ -46,7 +46,7 @@ local function getGoal(team)
     return t:FindFirstChild("Goal")
 end
 
---================ HOTKEY CONTROLLER (FULL) =================
+
 
 local Hotkeys = {
     Fly = Enum.KeyCode.F,           
@@ -70,7 +70,7 @@ local HotkeyEvents = {
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
 
-    -- Fly / AutoFarm / Reach
+
     for name, key in pairs(Hotkeys) do
         if input.KeyCode == key then
             States[name] = not States[name]
@@ -137,19 +137,19 @@ HotkeyEvents.Fly.Event:Connect(function(v)
     if v then startFly() else stopFly() end
 end)
 
--- AutoFarm Event
+
 HotkeyEvents.AutoFarm.Event:Connect(function(v)
     autoFarmEnabled = v
 end)
 
--- Reach Event
+
 HotkeyEvents.Reach.Event:Connect(function(v)
     trollReach = v
     LolReach = v
     newReachEnabled = v
 end)
 
---================ PRIVATE SERVER (KNIT) =================
+
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PrivateServerService
 pcall(function() PrivateServerService = Knit.GetService("PrivateServersService") end)
@@ -189,12 +189,10 @@ local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
 
--- =========================
+
 -- TSURENMODULE
--- =========================
 local TsurenModule = {}
 
--- Goal hitbox eski haline döndür
 function TsurenModule.FalseGoalHitbox()
     for _, player in game.Players:GetPlayers() do
         if player.Team ~= game.Players.LocalPlayer.Team and player.Team ~= nil then
@@ -207,7 +205,7 @@ function TsurenModule.FalseGoalHitbox()
     end
 end
 
--- Top otomatik shoot
+
 function TsurenModule.TrueAutoShoot()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     if not ball then return end
@@ -229,7 +227,6 @@ function TsurenModule.TrueAutoShoot()
     end)
 end
 
--- Top geldiğinde otomatik almak
 function TsurenModule.TrueAutoGetBall()
     local player = game.Players.LocalPlayer
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -275,7 +272,7 @@ local function HasBall()
     return false
 end
 
-local MainTab = Window:CreateTab("Main")
+local MainTab = Window:CreateTab("Main","layers")
 local AutoFarmEnabled = false
 
 MainTab:CreateToggle({
@@ -290,16 +287,16 @@ MainTab:CreateToggle({
                     local player = game.Players.LocalPlayer
                     local character = player.Character
                     if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
-                        -- Hitbox büyüt
+                        
                         character.Hitbox.Size = Vector3.new(500,50,500)
 
-                        -- Saha üstüne teleport
+                        
                         local offset = Vector3.new(0,20,0)
                         if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
                             character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
                         end
 
-                        -- AutoGetBall ve AutoShoot
+                        
                         pcall(function()
                             TsurenModule.TrueAutoGetBall()
                         end)
@@ -310,7 +307,7 @@ MainTab:CreateToggle({
                             end)
                         end
 
-                        -- Goal hitbox aç/kapa
+                        
                         for _, pl in pairs(game.Players:GetPlayers()) do
                             if pl.Team ~= player.Team and pl.Team ~= nil then
                                 local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
@@ -349,7 +346,7 @@ MainTab:CreateToggle({
             char.Hitbox.Size = Vector3.new(500, 50, 500)
         else
             
-            char.Hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398
+            char.Hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
             end)
         end
     end,
