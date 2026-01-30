@@ -17,7 +17,7 @@ local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS",
     LoadingTitle = "TsurenStudios",
     LoadingSubtitle = "Made by Tsubasa ♥️",
-    Theme = "Light"
+    Theme = "Ocean"
 })
 
 
