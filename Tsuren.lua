@@ -533,6 +533,26 @@ MainTab:CreateToggle({
         end
     end,
 })
+
+MainTab:CreateToggle({
+    Name = "Anti-AFK",
+    CurrentValue = true,
+    Flag = "AntiAFKToggle",
+    Callback = function(state)
+        if state then
+            local vu = game:GetService("VirtualUser")
+            _G.AntiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+                vu:CaptureController()
+                vu:ClickButton2(Vector2.new())
+            end)
+        else
+            if _G.AntiAFKConnection then
+                _G.AntiAFKConnection:Disconnect()
+                _G.AntiAFKConnection = nil
+            end
+        end
+    end,
+})
                         
 local tPlayers = Window:CreateTab("Players", "users")
 local fpsEnabled = false
