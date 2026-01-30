@@ -287,7 +287,7 @@ local function HasBall()
     return false
 end
 
-local MainTab = Window:CreateTab("Main","layers")
+local MainTab = Window:CreateTab("Main (New)","layers")
 
 -- References
 local Players = game:GetService("Players")
@@ -513,7 +513,7 @@ spawn(function()
 end)
 -- Bring Ball Toggle
 MainTab:CreateToggle({
-    Name = "Bring Ball",
+    Name = "Bring Ball (Beta)",
     CurrentValue = false,
     Flag = "BringBallToggle",
     Callback = function(state)
@@ -536,7 +536,7 @@ MainTab:CreateToggle({
 
 -- Anti-AFK Toggle
 MainTab:CreateToggle({
-    Name = "Anti-AFK",
+    Name = "Anti-AFK (Beta)",
     CurrentValue = true, -- Script açılır açılmaz aktif olsun
     Flag = "AntiAFKToggle",
     Callback = function(state)
