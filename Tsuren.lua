@@ -46,6 +46,35 @@ local function getGoal(team)
     return t:FindFirstChild("Goal")
 end
 
+-- TeamModule
+TeamModule = {}
+function TeamModule.JoinRandomTeam()
+    local Players = game:GetService("Players")
+    local RepStorage = game:GetService("ReplicatedStorage")
+    local Teams = game:GetService("Teams")
+    local LocalPlayer = Players.LocalPlayer
+
+    if LocalPlayer.Team ~= nil then return end -- Zaten takımda ise çık
+
+    local allTeams = {}
+    for _, t in pairs(Teams:GetChildren()) do
+        if t:IsA("Team") then
+            table.insert(allTeams, t)
+        end
+    end
+
+    if #allTeams == 0 then return end
+
+    local chosenTeam = allTeams[math.random(1, #allTeams)]
+
+    local joinRemote = RepStorage:WaitForChild("__GamemodeComm"):WaitForChild("RE"):WaitForChild("_RequestJoin")
+    for i = 1, 3 do
+        pcall(function()
+            joinRemote:FireServer(joinRemote)
+        end)
+        task.wait(0.1)
+    end
+end
 
 
 local Hotkeys = {
@@ -277,11 +306,6 @@ local MainTab = Window:CreateTab("Main","layers")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ======================
--- AUTO FARM
--- ======================
-local AutoFarmEnabled = false
-
 MainTab:CreateToggle({
     Name = "AutoFarm (Beta)",
     CurrentValue = false,
@@ -290,21 +314,27 @@ MainTab:CreateToggle({
         AutoFarmEnabled = state
 
         if state then
-            task.spawn(function()
+            spawn(function()
                 while AutoFarmEnabled do
                     local player = LocalPlayer
                     local character = player.Character
                     local hrp = character and character:FindFirstChild("HumanoidRootPart")
                     local hitbox = character and character:FindFirstChild("Hitbox")
 
+                    -- Takım yoksa rastgele takıma gir
+                    if not player.Team then
+                        TeamModule.JoinRandomTeam()
+                        task.wait(0.5) -- Takım seçimi için kısa bekleme
+                    end
+
+                    -- Eğer karakter hazırsa AutoFarm işlemleri
                     if character and hrp and hitbox then
-                        -- Hitbox
+                        -- Hitbox büyüt
                         hitbox.Size = Vector3.new(500,50,500)
 
-                        -- Teleport field
+                        -- Field'e teleport
                         local stadium = workspace:FindFirstChild("Stadium")
-                        if stadium and stadium:FindFirstChild("Field")
-                            and stadium.Field:FindFirstChild("Grass") then
+                        if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
                             hrp.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
                         end
 
@@ -313,36 +343,21 @@ MainTab:CreateToggle({
                             TsurenModule.TrueAutoGetBall()
                         end)
 
-                        -- Auto shoot (TOP BİZDEYSE)
+                        -- Auto shoot (top bizdeyse)
                         if HasBall() then
                             pcall(function()
                                 TsurenModule.TrueAutoShoot()
                             end)
-                        end
-
-                        -- Goal hitbox
-                        for _, pl in pairs(Players:GetPlayers()) do
-                            if pl.Team ~= player.Team and pl.Team then
-                                local goal =
-                                    workspace.Stadium
-                                    and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
-                                if goal and goal:FindFirstChild("Goal")
-                                    and goal.Goal:FindFirstChild("Hitbox") then
-                                    goal.Goal.Hitbox.Size = Vector3.new(800,50,800)
-                                    task.wait(0.15)
-                                    goal.Goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
-                                end
-                            end
                         end
                     end
 
                     task.wait(0.2)
                 end
 
-                -- KAPATILINCA RESET
-                local char = LocalPlayer.Character
-                if char and char:FindFirstChild("Hitbox") then
-                    char.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
+                -- Toggle kapatıldığında hitbox'u sıfırla
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("Hitbox") then
+                    character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
                 end
             end)
         end
