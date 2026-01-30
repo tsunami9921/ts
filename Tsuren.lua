@@ -528,22 +528,6 @@ MainTab:CreateToggle({
         else
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
-
--- Anti-AFK Toggle (bağımsız)
-MainTab:CreateToggle({
-    Name = "Anti-AFK",
-    CurrentValue = true,
-    Flag = "AntiAFKToggle",
-    Callback = function(state)
-        if state then
-            local vu = game:GetService("VirtualUser")
-            game:GetService("Players").LocalPlayer.Idled:Connect(function()
-                vu:CaptureController()
-                vu:ClickButton2(Vector2.new())
-            end)
-        else
-            -- Kapalıyken ekstra bir şey yapmaya gerek yok
-        end
     end,
 })
                         
