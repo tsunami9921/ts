@@ -288,99 +288,99 @@ local function HasBall()
 end
 
 local MainTab = Window:CreateTab("Main","layers")
--- VARIABLES
+-- References
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeamsService = game:GetService("Teams")
 local LocalPlayer = Players.LocalPlayer
-local TeamModule = {}
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Modules
+local TsurenModule = require(script:WaitForChild("TsurenModule")) -- Senin verdiğin modül
+local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
+local NotificationService = Knit.GetService("NotificationService")
+
+-- AutoFarm state
 local AutoFarmEnabled = false
 
--- CONFIG (BURAYI UI Dropdown veya direkt değiştir)
-TeamModule.SelectedTeams = {"Home", "Away"} -- Otomatik gireceği takımlar
-TeamModule.SelectedPositions = {"CF","GK","RF","LF"} -- Pozisyonlar
-
--- TEAM JOIN FUNCTION
-function TeamModule.JoinRandomTeam()
-    if not LocalPlayer.Team then
-        for _, teamName in ipairs(TeamModule.SelectedTeams) do
-            local team = TeamsService:FindFirstChild(teamName)
-            if team then
-                local RE = ReplicatedStorage:WaitForChild("__GamemodeComm"):WaitForChild("RE"):WaitForChild("_RequestJoin")
-                pcall(function()
-                    RE:FireServer(team)
-                end)
-                task.wait(0.5)
-            end
-        end
-    end
+-- Helper notification function
+local function SendNotification(title, body, theme)
+    theme = theme or "Info"
+    NotificationService:DisplayNotification({
+        Type = "Timed",
+        Theme = theme,
+        Title = title,
+        Body = body,
+        Duration = 3
+    })
 end
 
--- HITBOX EXPAND
-function ExpandHitbox()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Hitbox") then
-        char.Hitbox.Size = Vector3.new(500,50,500)
-    end
+-- Check if player has ball
+local function HasBall()
+    return LocalPlayer:GetAttribute("HasBall") or false
 end
 
--- TELEPORT TO FIELD
-function TeleportToField()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local stadium = workspace:FindFirstChild("Stadium")
-        if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
-            char.HumanoidRootPart.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
-        end
-    end
-end
-
--- AUTO BALL HANDLING
-local TsurenModule = require(LocalPlayer.PlayerScripts:WaitForChild("Client"):WaitForChild("Modules"):WaitForChild("TsurenModule"))
-
-function HasBall()
-    return LocalPlayer:GetAttribute("HasBall")
-end
-
--- AUTO FARM LOOP
-function StartAutoFarm()
+-- Main AutoFarm loop
+local function StartAutoFarm()
+    SendNotification("Auto Farm", "Starting Auto Farm...", "Info")
+    
     spawn(function()
         while AutoFarmEnabled do
-            TeamModule.JoinRandomTeam() -- Önce takım
-            task.wait(0.5)
-            
-            ExpandHitbox()
-            TeleportToField()
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
+                
+                -- Hitbox büyüt
+                character.Hitbox.Size = Vector3.new(500,50,500)
 
-            pcall(function() TsurenModule.TrueAutoGetBall() end)
+                -- Topu al ve shoot
+                pcall(TsurenModule.TrueAutoGetBall)
 
-            -- TOP BİZDE İSE GOL
-            if HasBall() then
-                pcall(function()
-                    TsurenModule.TrueAutoShoot()
-                end)
-            else
-                -- TOP BAŞKASINDAYSA AL
-                pcall(function()
-                    TsurenModule.TrueAutoGetBall() -- V2
-                end)
+                if HasBall() then
+                    pcall(TsurenModule.TrueAutoShoot)
+                end
+
+                -- Enemy goal hitbox
+                for _, pl in pairs(Players:GetPlayers()) do
+                    if pl.Team ~= LocalPlayer.Team and pl.Team ~= nil then
+                        local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
+                        if enemyGoal and enemyGoal:FindFirstChild("Goal") and enemyGoal.Goal:FindFirstChild("Hitbox") then
+                            enemyGoal.Goal.Hitbox.Size = Vector3.new(800,50,800)
+                            task.wait(0.2)
+                            enemyGoal.Goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
+                        end
+                    end
+                end
             end
-
-            task.wait(0.5)
+            task.wait(0.2)
         end
+
+        -- Toggle kapatıldığında hitbox'u eski haline döndür
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("Hitbox") then
+            character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
+        end
+        SendNotification("Auto Farm", "Auto Farm Stopped", "Error")
     end)
 end
 
--- RAYFIELD TOGGLE
+-- Rayfield MainTab Toggle
 MainTab:CreateToggle({
     Name = "AutoFarm (Beta)",
     CurrentValue = false,
+    Flag = "AutoFarmToggle",
     Callback = function(state)
         AutoFarmEnabled = state
-        if state then
+        if AutoFarmEnabled then
+            SendNotification("Auto Farm", "Join Any Team for Auto Farm Start", "Info")
+
+            -- Eğer oyuncu takımda değilse kısa süre bekle ve notification gönder
+            if not LocalPlayer.Team then
+                task.wait(1)
+                SendNotification("Auto Farm", "Auto Farm Starting...", "Info")
+            end
+
             StartAutoFarm()
         end
-    end
+    end,
 })
 
 -- Bring Ball Toggle
