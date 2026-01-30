@@ -514,7 +514,7 @@ end)
 
 -- Bring Ball Toggle
 MainTab:CreateToggle({
-    Name = "Bring Ball",
+    Name = "Bring Ball (Beta)",
     CurrentValue = false,
     Flag = "BringBallToggle",
     Callback = function(state)
