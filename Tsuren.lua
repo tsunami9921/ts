@@ -511,21 +511,24 @@ spawn(function()
         end
     end
 end)
-
 -- Bring Ball Toggle
 MainTab:CreateToggle({
-    Name = "Bring Ball (Beta)",
+    Name = "Bring Ball",
     CurrentValue = false,
     Flag = "BringBallToggle",
     Callback = function(state)
         BringBallEnabled = state
         local char = getCharacter()
+        if not char then return end
+
         local hitbox = char:FindFirstChild("Hitbox")
         if not hitbox then return end
 
         if state then
+            -- Bring Ball aktifken hitbox büyüt
             hitbox.Size = Vector3.new(500,50,50)
         else
+            -- Toggle kapatıldığında eski boyutuna döndür
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
     end,
