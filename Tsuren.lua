@@ -521,7 +521,7 @@ MainTab:CreateToggle({
         local char = getCharacter()
         if not char then return end
 
-        local hitbox = char:FindFirstChild("Hitbox")
+        local hitbox = char:WaitForChild("Hitbox")
         if not hitbox then return end
 
         if state then
