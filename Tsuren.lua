@@ -384,7 +384,6 @@ local function EnemyHasBall(plr)
         and plr.Character:FindFirstChild("HumanoidRootPart")
 end
 
-
 local function BringBallStep()
     local char = GetCharacter()
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -393,7 +392,7 @@ local function BringBallStep()
 
     local ball = GetBall()
 
-    
+    -- 1️⃣ Eğer top rakipteyse → teleport tackle
     for _, plr in ipairs(Players:GetPlayers()) do
         if EnemyHasBall(plr) then
             local oldCF = hrp.CFrame
@@ -408,15 +407,25 @@ local function BringBallStep()
         end
     end
 
+    -- 2️⃣ Top boştaysa → teleport yok, top bize gelsin
     if ball then
         hitbox.Size = Vector3.new(500, 50, 500)
 
         local dir = (hrp.Position - ball.Position)
         if dir.Magnitude < 60 then
+            -- topu bize doğru çekiyoruz
             ball.AssemblyLinearVelocity = dir.Unit * 120
         end
     end
 end
+
+
+local BringBallEnabled = true
+RunService.Heartbeat:Connect(function()
+    if BringBallEnabled then
+        pcall(BringBallStep)
+    end
+end)
 
 -- =========================
 -- UI TOGGLE
