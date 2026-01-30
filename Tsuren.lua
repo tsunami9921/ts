@@ -273,6 +273,13 @@ local function HasBall()
 end
 
 local MainTab = Window:CreateTab("Main","layers")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- ======================
+-- AUTO FARM
+-- ======================
 local AutoFarmEnabled = false
 
 MainTab:CreateToggle({
@@ -281,56 +288,71 @@ MainTab:CreateToggle({
     Flag = "AutoFarmToggle",
     Callback = function(state)
         AutoFarmEnabled = state
-        if state then
-            spawn(function()
-                while AutoFarmEnabled do
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character
-                    if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
-                        
-                        character.Hitbox.Size = Vector3.new(500,50,500)
 
-                        
-                        local offset = Vector3.new(0,20,0)
-                        if workspace:FindFirstChild("Stadium") and workspace.Stadium:FindFirstChild("Field") and workspace.Stadium.Field:FindFirstChild("Grass") then
-                            character.HumanoidRootPart.CFrame = workspace.Stadium.Field.Grass.CFrame + offset
+        if state then
+            task.spawn(function()
+                while AutoFarmEnabled do
+                    local player = LocalPlayer
+                    local character = player.Character
+                    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                    local hitbox = character and character:FindFirstChild("Hitbox")
+
+                    if character and hrp and hitbox then
+                        -- Hitbox
+                        hitbox.Size = Vector3.new(500,50,500)
+
+                        -- Teleport field
+                        local stadium = workspace:FindFirstChild("Stadium")
+                        if stadium and stadium:FindFirstChild("Field")
+                            and stadium.Field:FindFirstChild("Grass") then
+                            hrp.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
                         end
 
-                        
+                        -- Auto get ball
                         pcall(function()
                             TsurenModule.TrueAutoGetBall()
                         end)
 
+                        -- Auto shoot (TOP BİZDEYSE)
                         if HasBall() then
                             pcall(function()
                                 TsurenModule.TrueAutoShoot()
                             end)
                         end
 
-                        
-                        for _, pl in pairs(game.Players:GetPlayers()) do
-                            if pl.Team ~= player.Team and pl.Team ~= nil then
-                                local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
-                                if enemyGoal and enemyGoal:FindFirstChild("Goal") and enemyGoal.Goal:FindFirstChild("Hitbox") then
-                                    enemyGoal.Goal.Hitbox.Size = Vector3.new(800,50,800)
-                                    task.wait(0.2)
-                                    enemyGoal.Goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
+                        -- Goal hitbox
+                        for _, pl in pairs(Players:GetPlayers()) do
+                            if pl.Team ~= player.Team and pl.Team then
+                                local goal =
+                                    workspace.Stadium
+                                    and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
+                                if goal and goal:FindFirstChild("Goal")
+                                    and goal.Goal:FindFirstChild("Hitbox") then
+                                    goal.Goal.Hitbox.Size = Vector3.new(800,50,800)
+                                    task.wait(0.15)
+                                    goal.Goal.Hitbox.Size = Vector3.new(4.521,5.73,2.648)
                                 end
                             end
                         end
                     end
+
                     task.wait(0.2)
                 end
 
-                -- Toggle kapatıldığında hitbox'u sıfırla
-                local character = game.Players.LocalPlayer.Character
-                if character and character:FindFirstChild("Hitbox") then
-                    character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
+                -- KAPATILINCA RESET
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("Hitbox") then
+                    char.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
                 end
+            end)
+        end
+    end,
+})
 
+-- ======================
+-- BRING BALL
+-- ======================
 local BringBallEnabled = false
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 
 local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -348,11 +370,9 @@ MainTab:CreateToggle({
         if not hitbox then return end
 
         if state then
-            -- ENABLE
-            hitbox.Size = Vector3.new(500, 50, 500)
+            hitbox.Size = Vector3.new(500,50,500)
         else
-            -- DISABLE
-            hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
+            hitbox.Size = Vector3.new(4.5209999,5.73,2.398)
         end
     end,
 })
