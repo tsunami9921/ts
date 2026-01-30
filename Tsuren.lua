@@ -534,18 +534,26 @@ MainTab:CreateToggle({
     end,
 })
 
+-- Anti-AFK Toggle
 MainTab:CreateToggle({
     Name = "Anti-AFK",
-    CurrentValue = true,
+    CurrentValue = true, -- Script açılır açılmaz aktif olsun
     Flag = "AntiAFKToggle",
     Callback = function(state)
+        local Players = game:GetService("Players")
+        local LocalPlayer = Players.LocalPlayer
+        local vu = game:GetService("VirtualUser")
+
         if state then
-            local vu = game:GetService("VirtualUser")
-            _G.AntiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
-                vu:CaptureController()
-                vu:ClickButton2(Vector2.new())
-            end)
+            -- Eğer zaten bağlı değilse bağla
+            if not _G.AntiAFKConnection then
+                _G.AntiAFKConnection = LocalPlayer.Idled:Connect(function()
+                    vu:CaptureController()
+                    vu:ClickButton2(Vector2.new())
+                end)
+            end
         else
+            -- Kapattığında bağlantıyı kes
             if _G.AntiAFKConnection then
                 _G.AntiAFKConnection:Disconnect()
                 _G.AntiAFKConnection = nil
