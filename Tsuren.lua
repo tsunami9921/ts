@@ -289,25 +289,27 @@ end
 
 local MainTab = Window:CreateTab("Main","layers")
 
-
 -- References
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local StarterGui = game:GetService("StarterGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
 
--- TsurenModule zaten yukarıda tanımlı, require yok
+-- Modules
+local TsurenModule = TsurenModule -- Senin verdiğin modül zaten yukarda var
 
 -- AutoFarm state
 local AutoFarmEnabled = false
 
--- Helper notification function (CoreGui)
+-- CoreGui Notification Helper
 local function SendNotification(title, text, duration)
-    StarterGui:SetCore("SendNotification", {
-        Title = title or "Notification";
-        Text = text or "";
-        Duration = duration or 3;
+    duration = duration or 3
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = title,
+        Text = text,
+        Duration = duration,
+        Button1 = "OK"
     })
 end
 
@@ -318,8 +320,8 @@ end
 
 -- Main AutoFarm loop
 local function StartAutoFarm()
-    SendNotification("Auto Farm", "Auto Farm Starting...", 3)
-    
+    SendNotification("Auto Farm", "Auto Farm Started!", 3)
+
     spawn(function()
         while AutoFarmEnabled do
             local character = LocalPlayer.Character
@@ -328,13 +330,24 @@ local function StartAutoFarm()
                 -- Hitbox büyüt
                 character.Hitbox.Size = Vector3.new(500,50,500)
 
-                -- Topu al ve shoot
-                pcall(TsurenModule.TrueAutoGetBall)
-                if HasBall() then
-                    pcall(TsurenModule.TrueAutoShoot)
+                -- Ortada havada tut
+                local stadium = workspace:FindFirstChild("Stadium")
+                if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
+                    character.HumanoidRootPart.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
                 end
 
-                -- Enemy goal hitbox
+                -- Topu al
+                pcall(TsurenModule.TrueAutoGetBall)
+
+                -- Top bizdeyse shoot
+                if HasBall() then
+                    pcall(TsurenModule.TrueAutoShoot)
+                else
+                    -- Eğer top rakipteyse tackle ile al
+                    pcall(TsurenModule.TrueAutoGetBall)
+                end
+
+                -- Enemy goal hitbox büyüt
                 for _, pl in pairs(Players:GetPlayers()) do
                     if pl.Team ~= LocalPlayer.Team and pl.Team ~= nil then
                         local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
@@ -346,15 +359,17 @@ local function StartAutoFarm()
                     end
                 end
             end
+
             task.wait(0.2)
         end
 
-        -- Toggle kapatıldığında hitbox'u eski haline döndür
+        -- Toggle kapatıldığında hitbox resetle
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("Hitbox") then
             character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
         end
-        SendNotification("Auto Farm", "Auto Farm Stopped", 3)
+
+        SendNotification("Auto Farm", "Auto Farm Stopped!", 3)
     end)
 end
 
@@ -366,10 +381,8 @@ MainTab:CreateToggle({
     Callback = function(state)
         AutoFarmEnabled = state
         if AutoFarmEnabled then
-            SendNotification("Auto Farm", "Auto Farm Started!", 3)
+            SendNotification("Auto Farm", "Starting Auto Farm...", 3)
             StartAutoFarm()
-        else
-            SendNotification("Auto Farm", "Auto Farm Stopped", 3)
         end
     end,
 })
