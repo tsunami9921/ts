@@ -356,9 +356,6 @@ local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 
--- =========================
--- ACTION SERVICE (TACKLE)
--- =========================
 local ActionRF = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -368,12 +365,6 @@ local ActionRF = ReplicatedStorage
     :WaitForChild("ActionService")
     :WaitForChild("RF")
     :WaitForChild("PerformActionThenGet")
-
--- =========================
--- CORE
--- =========================
-local BringBallEnabled = false
-local BringBallConnection
 
 local function GetCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -393,18 +384,19 @@ local function EnemyHasBall(plr)
         and plr.Character:FindFirstChild("HumanoidRootPart")
 end
 
+
 local function BringBallStep()
-    local character = GetCharacter()
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    local hitbox = character:FindFirstChild("Hitbox")
+    local char = GetCharacter()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hitbox = char:FindFirstChild("Hitbox")
     if not hrp or not hitbox then return end
 
     local ball = GetBall()
 
+    
     for _, plr in ipairs(Players:GetPlayers()) do
         if EnemyHasBall(plr) then
             local oldCF = hrp.CFrame
-
             hrp.CFrame = plr.Character.HumanoidRootPart.CFrame
 
             for i = 1, 5 do
@@ -416,19 +408,13 @@ local function BringBallStep()
         end
     end
 
-    if ball and (ball.Position - hrp.Position).Magnitude > 5 then
-        local oldCF = hrp.CFrame
-
-        -- Hitbox büyüt → global catch
+    if ball then
         hitbox.Size = Vector3.new(500, 50, 500)
 
-        -- Topa ışınlan
-        hrp.CFrame = ball.CFrame + Vector3.new(0, 2, 0)
-
-        task.wait(0.05)
-
-        -- Eski yerine dön
-        hrp.CFrame = oldCF
+        local dir = (hrp.Position - ball.Position)
+        if dir.Magnitude < 60 then
+            ball.AssemblyLinearVelocity = dir.Unit * 120
+        end
     end
 end
 
