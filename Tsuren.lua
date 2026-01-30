@@ -14,7 +14,7 @@ local HttpService = game:GetService("HttpService")
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-    Name = "TsurenStudios | SLS",
+    Name = "TsurenStudios | SLS 🌸",
     LoadingTitle = "TsurenStudios",
     LoadingSubtitle = "Made by Tsubasa ♥️",
     Theme = "Bloom"
