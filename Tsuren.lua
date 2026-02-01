@@ -1211,19 +1211,28 @@ local SoundService = game:GetService("SoundService")
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- 🌙 GECE AYARLARI
-Lighting.ClockTime = 21
-Lighting.Brightness = 2.5
-Lighting.ExposureCompensation = 0.3
-Lighting.GlobalShadows = true
-Lighting.OutdoorAmbient = Color3.fromRGB(120, 120, 140)
-Lighting.Ambient = Color3.fromRGB(140, 140, 160)
+-- ==============================================
+-- SAVE ORIGINAL LIGHTING & ATMOSPHERE
+-- ==============================================
+local originalLighting = {
+    ClockTime = Lighting.ClockTime,
+    Brightness = Lighting.Brightness,
+    ExposureCompensation = Lighting.ExposureCompensation,
+    GlobalShadows = Lighting.GlobalShadows,
+    OutdoorAmbient = Lighting.OutdoorAmbient,
+    Ambient = Lighting.Ambient,
+}
 
--- Atmosphere varsa sil
+local originalAtmosphere = nil
 local atm = Lighting:FindFirstChildOfClass("Atmosphere")
-if atm then atm:Destroy() end
+if atm then
+    originalAtmosphere = atm:Clone()
+    atm:Destroy()
+end
 
+-- ==============================================
 -- ❄️ KAR EMITTER PART
+-- ==============================================
 local snowPart = Instance.new("Part")
 snowPart.Name = "SnowEmitterPart"
 snowPart.Size = Vector3.new(1510, 2, 1510)
@@ -1233,11 +1242,10 @@ snowPart.CanCollide = false
 snowPart.Transparency = 1
 snowPart.Parent = Workspace
 
--- ❄️ KAR PARTICLE (BÜYÜK BOY, DÜZGÜN YAĞIŞ)
 local snow = Instance.new("ParticleEmitter")
 snow.Parent = snowPart
-snow.Enabled = true
-snow.Rate = 200 -- 200 tane kar partikülü
+snow.Enabled = false -- default kapalı
+snow.Rate = 200
 snow.Lifetime = NumberRange.new(5, 6)
 snow.Speed = NumberRange.new(3, 5)
 snow.VelocitySpread = 20
@@ -1262,32 +1270,26 @@ wind.Volume = 0.5
 wind.Looped = true
 wind.PlaybackSpeed = 1
 wind.Parent = SoundService
-wind:Play()
 
--- 🌬️ RÜZGAR FİZİĞİ (KAR SAĞA SOLA)
+-- 🌬️ RÜZGAR FİZİĞİ
 local windX, windZ = 0, 0
 local targetX, targetZ = math.random(-10, 10), math.random(-10, 10)
-
 RunService.Heartbeat:Connect(function(dt)
-    windX += (targetX - windX) * dt * 0.5
-    windZ += (targetZ - windZ) * dt * 0.5
-
-    snow.Acceleration = Vector3.new(windX, -15, windZ)  
-
-    if math.abs(windX - targetX) < 1 then  
-        targetX = math.random(-10, 10)  
-    end  
-    if math.abs(windZ - targetZ) < 1 then  
-        targetZ = math.random(-10, 10)  
+    if snow.Enabled then
+        windX += (targetX - windX) * dt * 0.5
+        windZ += (targetZ - windZ) * dt * 0.5
+        snow.Acceleration = Vector3.new(windX, -15, windZ)
+        if math.abs(windX - targetX) < 1 then targetX = math.random(-10, 10) end
+        if math.abs(windZ - targetZ) < 1 then targetZ = math.random(-10, 10) end
     end
 end)
 
 -- ==============================================
--- WEATHER TAB (RAIN ve SNOW TOGGLE)
+-- WEATHER TAB
 -- ==============================================
 local tWeather = Window:CreateTab("Weather","cloud-rain")
 
--- Mevcut Rain Toggle
+-- Mevcut Rain Toggle (dokunma)
 local rainEnabled = false
 tWeather:CreateToggle({
     Name="Rain",
@@ -1300,20 +1302,46 @@ tWeather:CreateToggle({
 })
 
 -- ❄️ Snow Toggle
-local snowEnabled = true -- default açık
+local snowEnabled = false
 tWeather:CreateToggle({
     Name="Snow",
     CurrentValue=snowEnabled,
     Callback=function(v)
         snowEnabled = v
+        if snowEnabled then
+            -- Kar ve rüzgar aç
+            snow.Enabled = true
+            wind:Play()
 
-        -- Kar ve Rüzgar aç/kapa
-        if snowPart and snow and wind then
-            snow.Enabled = snowEnabled
-            if snowEnabled then
-                wind:Play()
-            else
-                wind:Stop()
+            -- GECE AYARLARI
+            Lighting.ClockTime = 21
+            Lighting.Brightness = 2.5
+            Lighting.ExposureCompensation = 0.3
+            Lighting.GlobalShadows = true
+            Lighting.OutdoorAmbient = Color3.fromRGB(120, 120, 140)
+            Lighting.Ambient = Color3.fromRGB(140, 140, 160)
+
+            -- Atmosphere varsa sil
+            local atm = Lighting:FindFirstChildOfClass("Atmosphere")
+            if atm then atm:Destroy() end
+        else
+            -- Kar ve rüzgar kapat
+            snow.Enabled = false
+            wind:Stop()
+
+            -- Orijinal Lighting & Atmosphere geri yükle
+            Lighting.ClockTime = originalLighting.ClockTime
+            Lighting.Brightness = originalLighting.Brightness
+            Lighting.ExposureCompensation = originalLighting.ExposureCompensation
+            Lighting.GlobalShadows = originalLighting.GlobalShadows
+            Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
+            Lighting.Ambient = originalLighting.Ambient
+
+            -- Orijinal Atmosphere varsa geri koy
+            local atm = Lighting:FindFirstChildOfClass("Atmosphere")
+            if atm then atm:Destroy() end
+            if originalAtmosphere then
+                originalAtmosphere:Clone().Parent = Lighting
             end
         end
     end
