@@ -944,17 +944,14 @@ PacksTab:CreateButton({
             end)
 
             if ok and result == true then
-                -- Sadece gerçekten başarılı olanlar
                 StarterGui:SetCore("SendNotification", {
                     Title = "Redeem",
                     Text = code .. " başarılı!",
                     Duration = 3
                 })
             elseif ok and result ~= true then
-                -- Kupon geçersiz veya süresi dolmuş, bildirim atma
                 print("Kupon geçersiz veya süresi dolmuş:", code)
             else
-                -- Hata oluştuysa konsola yaz
                 warn("Redeem Hata: "..code.." - "..tostring(result))
             end
 
@@ -962,6 +959,7 @@ PacksTab:CreateButton({
         end
     end
 })
+
 
 local tAnim = Window:CreateTab("Animations / Dances","star")
 
