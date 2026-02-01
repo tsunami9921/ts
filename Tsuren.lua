@@ -885,6 +885,9 @@ PacksTab:CreateToggle({
     end
 })
 
+local StarterGui = game:GetService("StarterGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Coupons = {
     "PACKS",
     "SLS25",
