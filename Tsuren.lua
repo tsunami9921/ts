@@ -1204,87 +1204,121 @@ tReach:CreateToggle({Name="Troll Reach (V2)", CurrentValue=false, Callback=funct
 tReach:CreateToggle({Name="NormalReach (V1)", CurrentValue=false, Callback=function(v) LolReach=v end})
 tReach:CreateToggle({Name="New Reach", CurrentValue=false, Callback=function(v) newReachEnabled=v if not v and newReachPart then newReachPart:Destroy() newReachPart=nil end end})
 
---================ WEATHER =================
-local tWeather=Window:CreateTab("Weather","cloud-rain")
-local rainEnabled=false
-tWeather:CreateToggle({Name="Rain", CurrentValue=false, Callback=function(v)
-    rainEnabled=v
-    local WeatherState=require(ReplicatedStorage.Shared.SharedInterfaceStates).Player.Preferences.Weather
-    WeatherState:set(v and "Rain" or "Clear")
-end})
-local snowEnabled = false
-local snowPart, snow, wind -- üstteki snow emitter ve sound değişkenlerini dışa açıyoruz
+-- SERVICES
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- 🌙 GECE AYARLARI
+Lighting.ClockTime = 21
+Lighting.Brightness = 2.5
+Lighting.ExposureCompensation = 0.3
+Lighting.GlobalShadows = true
+Lighting.OutdoorAmbient = Color3.fromRGB(120, 120, 140)
+Lighting.Ambient = Color3.fromRGB(140, 140, 160)
+
+-- Atmosphere varsa sil
+local atm = Lighting:FindFirstChildOfClass("Atmosphere")
+if atm then atm:Destroy() end
+
+-- ❄️ KAR EMITTER PART
+local snowPart = Instance.new("Part")
+snowPart.Name = "SnowEmitterPart"
+snowPart.Size = Vector3.new(1510, 2, 1510)
+snowPart.CFrame = CFrame.new(27.2634888, 104.561302, -327.98111)
+snowPart.Anchored = true
+snowPart.CanCollide = false
+snowPart.Transparency = 1
+snowPart.Parent = Workspace
+
+-- ❄️ KAR PARTICLE (BÜYÜK BOY, DÜZGÜN YAĞIŞ)
+local snow = Instance.new("ParticleEmitter")
+snow.Parent = snowPart
+snow.Enabled = true
+snow.Rate = 200 -- 200 tane kar partikülü
+snow.Lifetime = NumberRange.new(5, 6)
+snow.Speed = NumberRange.new(3, 5)
+snow.VelocitySpread = 20
+snow.Acceleration = Vector3.new(0, -15, 0)
+snow.EmissionDirection = Enum.NormalId.Bottom
+snow.SpreadAngle = Vector2.new(180, 180)
+snow.Size = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 3.4),
+    NumberSequenceKeypoint.new(1, 0.5)
+})
+snow.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+snow.Transparency = NumberSequence.new(0)
+snow.LightInfluence = 0
+snow.Brightness = 2
+snow.RotSpeed = NumberRange.new(-50, 50)
+
+-- 🌬️ RÜZGAR SESİ
+local wind = Instance.new("Sound")
+wind.Name = "SnowWind"
+wind.SoundId = "rbxassetid://9056932358"
+wind.Volume = 0.5
+wind.Looped = true
+wind.PlaybackSpeed = 1
+wind.Parent = SoundService
+wind:Play()
+
+-- 🌬️ RÜZGAR FİZİĞİ (KAR SAĞA SOLA)
+local windX, windZ = 0, 0
+local targetX, targetZ = math.random(-10, 10), math.random(-10, 10)
+
+RunService.Heartbeat:Connect(function(dt)
+    windX += (targetX - windX) * dt * 0.5
+    windZ += (targetZ - windZ) * dt * 0.5
+
+    snow.Acceleration = Vector3.new(windX, -15, windZ)  
+
+    if math.abs(windX - targetX) < 1 then  
+        targetX = math.random(-10, 10)  
+    end  
+    if math.abs(windZ - targetZ) < 1 then  
+        targetZ = math.random(-10, 10)  
+    end
+end)
+
+-- ==============================================
+-- WEATHER TAB (RAIN ve SNOW TOGGLE)
+-- ==============================================
+local tWeather = Window:CreateTab("Weather","cloud-rain")
+
+-- Mevcut Rain Toggle
+local rainEnabled = false
 tWeather:CreateToggle({
-    Name = "Snow",
-    CurrentValue = false,
-    Callback = function(v)
+    Name="Rain",
+    CurrentValue=false,
+    Callback=function(v)
+        rainEnabled = v
+        local WeatherState=require(ReplicatedStorage.Shared.SharedInterfaceStates).Player.Preferences.Weather
+        WeatherState:set(v and "Rain" or "Clear")
+    end
+})
+
+-- ❄️ Snow Toggle
+local snowEnabled = true -- default açık
+tWeather:CreateToggle({
+    Name="Snow",
+    CurrentValue=snowEnabled,
+    Callback=function(v)
         snowEnabled = v
 
-        if v then
-            -- Snow Part ve Particle oluştur
-            snowPart = Instance.new("Part")
-            snowPart.Name = "SnowEmitterPart"
-            snowPart.Size = Vector3.new(1510, 2, 1510)
-            snowPart.CFrame = CFrame.new(27.2634888, 104.561302, -327.98111)
-            snowPart.Anchored = true
-            snowPart.CanCollide = false
-            snowPart.Transparency = 1
-            snowPart.Parent = Workspace
-
-            snow = Instance.new("ParticleEmitter")
-            snow.Parent = snowPart
-            snow.Enabled = true
-            snow.Rate = 200 -- uygun rate
-            snow.Lifetime = NumberRange.new(5, 6)
-            snow.Speed = NumberRange.new(3, 5)
-            snow.VelocitySpread = 20
-            snow.Acceleration = Vector3.new(0, -15, 0)
-            snow.EmissionDirection = Enum.NormalId.Bottom
-            snow.SpreadAngle = Vector2.new(180, 180)
-            snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 3.4), NumberSequenceKeypoint.new(1, 0.5)})
-            snow.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
-            snow.Transparency = NumberSequence.new(0)
-            snow.LightInfluence = 0
-            snow.Brightness = 2
-            snow.RotSpeed = NumberRange.new(-50, 50)
-
-            -- Wind Sound
-            wind = Instance.new("Sound")
-            wind.Name = "SnowWind"
-            wind.SoundId = "rbxassetid://9056932358"
-            wind.Volume = 0.5
-            wind.Looped = true
-            wind.PlaybackSpeed = 1
-            wind.Parent = SoundService
-            wind:Play()
-
-            -- Kar rüzgar fiziği
-            local windX, windZ = 0, 0
-            local targetX, targetZ = math.random(-10, 10), math.random(-10, 10)
-            snowWindConnection = RunService.Heartbeat:Connect(function(dt)
-                if not snowEnabled then return end
-                windX += (targetX - windX) * dt * 0.5
-                windZ += (targetZ - windZ) * dt * 0.5
-
-                snow.Acceleration = Vector3.new(windX, -15, windZ)
-
-                if math.abs(windX - targetX) < 1 then
-                    targetX = math.random(-10, 10)
-                end
-                if math.abs(windZ - targetZ) < 1 then
-                    targetZ = math.random(-10, 10)
-                end
-            end)
-
-        else
-            -- Disable Snow
-            if snow then snow.Enabled = false end
-            if snowPart then snowPart:Destroy() end
-            if wind then wind:Stop() wind:Destroy() end
-            if snowWindConnection then snowWindConnection:Disconnect() end
+        -- Kar ve Rüzgar aç/kapa
+        if snowPart and snow and wind then
+            snow.Enabled = snowEnabled
+            if snowEnabled then
+                wind:Play()
+            else
+                wind:Stop()
+            end
         end
     end
 })
+
 
 --================ GOAL TAB FIX =================
 local tGoal = Window:CreateTab("Goal Setting", "target")
