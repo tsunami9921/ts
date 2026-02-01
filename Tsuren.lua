@@ -926,7 +926,7 @@ if not success or not RedeemRF then
     warn("RedeemCode: we cant find RemoteFunction") -- düzeltildi
 end
 
-PackTab:CreateButton({
+PacksTab:CreateButton({
     Name = "Redeem All",
     Callback = function()
         if not RedeemRF then
