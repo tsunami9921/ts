@@ -925,11 +925,11 @@ local success, RedeemRF = pcall(function()
 end)
 
 if not success or not RedeemRF then
-    warn("RedeemCode: we cant find RemoteFunction )
+    warn("RedeemCode: we cant find RemoteFunction") -- düzeltildi
 end
 
-
-PackTab:CreateButton({
+-- Burada PackTab değil PacksTab olmalı
+PacksTab:CreateButton({
     Name = "Redeem All",
     Callback = function()
         if not RedeemRF then
