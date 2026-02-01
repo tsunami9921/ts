@@ -311,12 +311,12 @@ local function SendNotification(title, text, duration)
     })
 end
 
--- Check if player has ball
+
 local function HasBall()
     return LocalPlayer:GetAttribute("HasBall") or false
 end
 
--- Get player who has ball (rakip)
+
 local function GetBallHolder()
     for _, p in pairs(Players:GetPlayers()) do
         if p:GetAttribute("HasBall") and p.Team ~= LocalPlayer.Team then
@@ -326,7 +326,7 @@ local function GetBallHolder()
     return nil
 end
 
--- AutoShoot fix: top pozisyonuna göre
+
 local function AutoShoot()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     if not ball then return end
@@ -347,7 +347,7 @@ local function AutoShoot()
         "ShotActivated",
         ball,
         ball.Position,
-        goalPos + Vector3.new(0,5,0) -- biraz yukarıdan
+        goalPos + Vector3.new(0,5,0) 
     }
 
     local ActionService = ReplicatedStorage:WaitForChild("Packages")
@@ -375,10 +375,10 @@ local function StartAutoFarm()
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
                 
-                -- Hitbox büyüt
+                
                 character.Hitbox.Size = Vector3.new(500,50,500)
 
-                -- Orta noktada bekle
+                
                 local stadium = workspace:FindFirstChild("Stadium")
                 if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
                     character.HumanoidRootPart.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
@@ -387,10 +387,10 @@ local function StartAutoFarm()
                 local ballHolder = GetBallHolder()
 
                 if HasBall() then
-                    -- Top bizdeyse auto shoot
+                    
                     pcall(AutoShoot)
                 elseif ballHolder then
-                    -- Rakipteyse teleport + tackle
+                    
                     if ballHolder.Character and ballHolder.Character:FindFirstChild("HumanoidRootPart") then
                         local originalCFrame = character.HumanoidRootPart.CFrame
                         character:PivotTo(ballHolder.Character.HumanoidRootPart.CFrame + Vector3.new(0,0,0))
@@ -398,11 +398,11 @@ local function StartAutoFarm()
                         character:PivotTo(originalCFrame)
                     end
                 else
-                    -- Top boşta → kale shoot
+                    
                     pcall(AutoShoot)
                 end
 
-                -- Enemy goal hitbox büyüt
+                
                 for _, pl in pairs(Players:GetPlayers()) do
                     if pl.Team ~= LocalPlayer.Team and pl.Team ~= nil then
                         local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
@@ -417,7 +417,7 @@ local function StartAutoFarm()
             task.wait(0.2)
         end
 
-        -- Toggle kapatıldığında hitbox resetle
+        
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("Hitbox") then
             character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
@@ -427,7 +427,7 @@ local function StartAutoFarm()
     end)
 end
 
--- Rayfield MainTab Toggle
+
 MainTab:CreateToggle({
     Name = "AutoFarm (Beta)",
     CurrentValue = false,
@@ -445,12 +445,12 @@ local BringBallEnabled = false
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Saf karakter alma
+
 local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 end
 
--- Rakip oyuncu topa sahip mi kontrol
+
 local function PlayerHasBall()
     for _, p in pairs(Players:GetPlayers()) do
         if p:GetAttribute("HasBall", false) and p.Team ~= LocalPlayer.Team and p:GetAttribute("TeamPosition") ~= "GK" then
@@ -460,7 +460,7 @@ local function PlayerHasBall()
     return nil
 end
 
--- Local player topa sahip mi
+
 local function LocalHasBall()
     local char = getCharacter()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
@@ -471,23 +471,23 @@ local function LocalHasBall()
     return false
 end
 
--- Loop başlat, ama toggle true olana kadar hiçbir şey yapma
+
 spawn(function()
     while true do
         task.wait(0.2)
 
-        if not BringBallEnabled then continue end -- TOGGLE KAPALIYSA SKIP
+        if not BringBallEnabled then continue end
 
         local char = getCharacter()
         if not char or not char:FindFirstChild("Hitbox") then continue end
 
-        -- Toggle açıkken hitbox büyüt
+        
         char.Hitbox.Size = Vector3.new(500,50,500)
 
         local enemyWithBall = PlayerHasBall()
 
         if enemyWithBall then
-            -- Rakip topa sahipse tackle (teleport yok)
+            
             local currentCFrame = char.HumanoidRootPart.CFrame
             char:PivotTo(enemyWithBall.Character.HumanoidRootPart.CFrame)
 
@@ -504,14 +504,14 @@ spawn(function()
         end
 
         if LocalHasBall() then
-            -- Bizdeyse shoot yap
+            
             pcall(function()
                 TsurenModule.TrueAutoShoot()
             end)
         end
     end
 end)
--- Bring Ball Toggle
+
 MainTab:CreateToggle({
     Name = "Bring Ball (Beta)",
     CurrentValue = false,
@@ -525,16 +525,16 @@ MainTab:CreateToggle({
         if not hitbox then return end
 
         if state then
-            -- Bring Ball aktifken hitbox büyüt
+            
             hitbox.Size = Vector3.new(500,50,50)
         else
-            -- Toggle kapatıldığında eski boyutuna döndür
+            
             hitbox.Size = Vector3.new(4.5209999, 5.73, 2.398)
         end
     end,
 })
 
--- Anti-AFK Toggle
+
 MainTab:CreateToggle({
     Name = "Anti-AFK (Beta)",
     CurrentValue = true, -- Script açılır açılmaz aktif olsun
@@ -545,7 +545,7 @@ MainTab:CreateToggle({
         local vu = game:GetService("VirtualUser")
 
         if state then
-            -- Eğer zaten bağlı değilse bağla
+            
             if not _G.AntiAFKConnection then
                 _G.AntiAFKConnection = LocalPlayer.Idled:Connect(function()
                     vu:CaptureController()
@@ -553,7 +553,7 @@ MainTab:CreateToggle({
                 end)
             end
         else
-            -- Kapattığında bağlantıyı kes
+            
             if _G.AntiAFKConnection then
                 _G.AntiAFKConnection:Disconnect()
                 _G.AntiAFKConnection = nil
@@ -641,7 +641,7 @@ task.spawn(function()
 end)
 
 
---================ FLY (SAFE / ANTI-KICK) =================
+
 
 local flyEnabled = false
 local flySpeed = 60
@@ -652,10 +652,10 @@ local function startFly()
     local hum = GetHumanoid()
     if not hrp or not hum then return end
 
-    -- güvenli fizik
+    
     hum:ChangeState(Enum.HumanoidStateType.Physics)
 
-    -- varsa eskiyi sil
+    
     for _,v in pairs(hrp:GetChildren()) do
         if v:IsA("BodyVelocity") and v.Name == "FlyVelocity" then
             v:Destroy()
@@ -676,11 +676,11 @@ local function startFly()
         local moveDir = hum.MoveDirection
         local vel = Vector3.zero
 
-        -- ileri / sağ / sol
+        
         vel += cam.CFrame.LookVector * moveDir.Z * flySpeed
         vel += cam.CFrame.RightVector * moveDir.X * flySpeed
 
-        -- yukarı / aşağı
+        
         if UIS:IsKeyDown(Enum.KeyCode.Space) then
             vel += Vector3.new(0, flySpeed * 0.6, 0)
         elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
@@ -689,7 +689,7 @@ local function startFly()
             vel += Vector3.new(0, -4, 0) -- süzülme (kick-safe)
         end
 
-        -- aşırı yükselme koruması
+        
         if hrp.Position.Y > 130 then
             vel = Vector3.new(vel.X, -8, vel.Z)
         end
@@ -722,7 +722,7 @@ local function stopFly()
     end
 end
 
---================ UI =================
+
 
 tPlayers:CreateToggle({
     Name = "Fly (Bugs / Anti Kick)",
@@ -747,7 +747,7 @@ tPlayers:CreateSlider({
     end
 })
 
---================ HOTKEY (F) =================
+
 HotkeyEvents.Fly.Event:Connect(function(v)
     flyEnabled = v
     if v then
@@ -767,7 +767,7 @@ tPlayers:CreateSlider({Name="JumpPower", Range={50,200}, Increment=1, CurrentVal
     if h then h.JumpPower=v end
 end})
 
--- Through Barriers fix
+
 local charThrough=false
 local function updateCollision()
     local char=LocalPlayer.Character
@@ -781,7 +781,7 @@ end
 
 tPlayers:CreateToggle({Name="Through Barriers", CurrentValue=false, Callback=function(v) charThrough=v updateCollision() end})
 
--- Infinite Stamina
+
 local StaminaController
 pcall(function() StaminaController=Knit.GetController("StaminaController") end)
 local SharedInterfaceStates=require(ReplicatedStorage.Shared.SharedInterfaceStates)
@@ -809,9 +809,7 @@ UIS.InputBegan:Connect(function(i,gp)
     end
 end)
 
---==================================================
--- PACK TAB
---==================================================
+-- cl made by Tsubasa
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -820,19 +818,19 @@ local PacksService = Knit.GetService("PacksService")
 
 local PacksData = require(ReplicatedStorage.Shared.Defaults.Packs)
 
--- Pack list
+
 local PackTypes = {}
 for name,_ in pairs(PacksData.ItemData) do
     table.insert(PackTypes, name)
 end
 table.sort(PackTypes)
 
--- State
+
 local SelectedPack = PackTypes[1]
 local AutoBuy = false
 local Buying = false
 
--- Buy func
+
 local function BuyPack()
     if Buying then return end
     Buying = true
@@ -845,7 +843,7 @@ local function BuyPack()
     Buying = false
 end
 
--- Auto loop
+
 task.spawn(function()
     while task.wait(2) do
         if AutoBuy and not Buying then
@@ -854,7 +852,7 @@ task.spawn(function()
     end
 end)
 
--- UI
+
 local PacksTab = Window:CreateTab("Packs", "shopping-cart")
 
 PacksTab:CreateDropdown({
@@ -928,8 +926,7 @@ if not success or not RedeemRF then
     warn("RedeemCode: we cant find RemoteFunction") -- düzeltildi
 end
 
--- Burada PackTab değil PacksTab olmalı
-PacksTab:CreateButton({
+PackTab:CreateButton({
     Name = "Redeem All",
     Callback = function()
         if not RedeemRF then
@@ -942,28 +939,29 @@ PacksTab:CreateButton({
         end
 
         for _, code in ipairs(Coupons) do
-            task.spawn(function()
-                local ok, err = pcall(function()
-                    RedeemRF:InvokeServer(code)
-                end)
-                if ok then
-                    StarterGui:SetCore("SendNotification", {
-                        Title = "Redeem",
-                        Text = code .. " başarılı!",
-                        Duration = 3
-                    })
-                else
-                    StarterGui:SetCore("SendNotification", {
-                        Title = "Redeem Hata",
-                        Text = code .. " - " .. tostring(err),
-                        Duration = 5
-                    })
-                end
+            local ok, result = pcall(function()
+                return RedeemRF:InvokeServer(code)
             end)
+
+            if ok and result == true then
+                -- Sadece gerçekten başarılı olanlar
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Redeem",
+                    Text = code .. " başarılı!",
+                    Duration = 3
+                })
+            elseif ok and result ~= true then
+                -- Kupon geçersiz veya süresi dolmuş, bildirim atma
+                print("Kupon geçersiz veya süresi dolmuş:", code)
+            else
+                -- Hata oluştuysa konsola yaz
+                warn("Redeem Hata: "..code.." - "..tostring(result))
+            end
+
+            task.wait(0.2)
         end
     end
 })
-
 
 local tAnim = Window:CreateTab("Animations / Dances","star")
 
