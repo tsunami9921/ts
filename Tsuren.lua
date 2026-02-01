@@ -1204,35 +1204,14 @@ tReach:CreateToggle({Name="Troll Reach (V2)", CurrentValue=false, Callback=funct
 tReach:CreateToggle({Name="NormalReach (V1)", CurrentValue=false, Callback=function(v) LolReach=v end})
 tReach:CreateToggle({Name="New Reach", CurrentValue=false, Callback=function(v) newReachEnabled=v if not v and newReachPart then newReachPart:Destroy() newReachPart=nil end end})
 
--- SERVICES
+
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local SoundService = game:GetService("SoundService")
 local RunService = game:GetService("RunService")
+local NetworkClient = game:GetService("NetworkClient")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- ==============================================
--- SAVE ORIGINAL LIGHTING & ATMOSPHERE
--- ==============================================
-local originalLighting = {
-    ClockTime = Lighting.ClockTime,
-    Brightness = Lighting.Brightness,
-    ExposureCompensation = Lighting.ExposureCompensation,
-    GlobalShadows = Lighting.GlobalShadows,
-    OutdoorAmbient = Lighting.OutdoorAmbient,
-    Ambient = Lighting.Ambient,
-}
-
-local originalAtmosphere = nil
-local atm = Lighting:FindFirstChildOfClass("Atmosphere")
-if atm then
-    originalAtmosphere = atm:Clone()
-    atm:Destroy()
-end
-
--- ==============================================
--- ❄️ KAR EMITTER PART
--- ==============================================
 local snowPart = Instance.new("Part")
 snowPart.Name = "SnowEmitterPart"
 snowPart.Size = Vector3.new(1510, 2, 1510)
@@ -1244,7 +1223,7 @@ snowPart.Parent = Workspace
 
 local snow = Instance.new("ParticleEmitter")
 snow.Parent = snowPart
-snow.Enabled = false -- default kapalı
+snow.Enabled = false
 snow.Rate = 200
 snow.Lifetime = NumberRange.new(5, 6)
 snow.Speed = NumberRange.new(3, 5)
@@ -1252,17 +1231,13 @@ snow.VelocitySpread = 20
 snow.Acceleration = Vector3.new(0, -15, 0)
 snow.EmissionDirection = Enum.NormalId.Bottom
 snow.SpreadAngle = Vector2.new(180, 180)
-snow.Size = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 3.4),
-    NumberSequenceKeypoint.new(1, 0.5)
-})
+snow.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 3.4), NumberSequenceKeypoint.new(1, 0.5)})
 snow.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
 snow.Transparency = NumberSequence.new(0)
 snow.LightInfluence = 0
 snow.Brightness = 2
 snow.RotSpeed = NumberRange.new(-50, 50)
 
--- 🌬️ RÜZGAR SESİ
 local wind = Instance.new("Sound")
 wind.Name = "SnowWind"
 wind.SoundId = "rbxassetid://9056932358"
@@ -1271,7 +1246,6 @@ wind.Looped = true
 wind.PlaybackSpeed = 1
 wind.Parent = SoundService
 
--- 🌬️ RÜZGAR FİZİĞİ
 local windX, windZ = 0, 0
 local targetX, targetZ = math.random(-10, 10), math.random(-10, 10)
 RunService.Heartbeat:Connect(function(dt)
@@ -1284,12 +1258,22 @@ RunService.Heartbeat:Connect(function(dt)
     end
 end)
 
--- ==============================================
--- WEATHER TAB
--- ==============================================
+local originalEffects = {}
+local effectNames = {"Atmosphere","Sky","Bloom","ColorCorrection","InterfaceBlur","SunRays","TransitionBlur"}
+for _, name in pairs(effectNames) do
+    local obj = Lighting:FindFirstChild(name)
+    if obj then
+        originalEffects[name] = obj:Clone()
+    end
+end
+
+local originalLighting = {}
+for _, prop in pairs({"ClockTime","Brightness","ExposureCompensation","GlobalShadows","OutdoorAmbient","Ambient"}) do
+    originalLighting[prop] = Lighting[prop]
+end
+
 local tWeather = Window:CreateTab("Weather","cloud-rain")
 
--- Mevcut Rain Toggle (dokunma)
 local rainEnabled = false
 tWeather:CreateToggle({
     Name="Rain",
@@ -1301,7 +1285,6 @@ tWeather:CreateToggle({
     end
 })
 
--- ❄️ Snow Toggle
 local snowEnabled = false
 tWeather:CreateToggle({
     Name="Snow",
@@ -1309,39 +1292,31 @@ tWeather:CreateToggle({
     Callback=function(v)
         snowEnabled = v
         if snowEnabled then
-            -- Kar ve rüzgar aç
             snow.Enabled = true
             wind:Play()
-
-            -- GECE AYARLARI
             Lighting.ClockTime = 21
             Lighting.Brightness = 2.5
             Lighting.ExposureCompensation = 0.3
             Lighting.GlobalShadows = true
             Lighting.OutdoorAmbient = Color3.fromRGB(120, 120, 140)
             Lighting.Ambient = Color3.fromRGB(140, 140, 160)
-
-            -- Atmosphere varsa sil
-            local atm = Lighting:FindFirstChildOfClass("Atmosphere")
-            if atm then atm:Destroy() end
+            for _, name in pairs(effectNames) do
+                local obj = Lighting:FindFirstChild(name)
+                if obj then obj:Destroy() end
+            end
         else
-            -- Kar ve rüzgar kapat
             snow.Enabled = false
             wind:Stop()
-
-            -- Orijinal Lighting & Atmosphere geri yükle
-            Lighting.ClockTime = originalLighting.ClockTime
-            Lighting.Brightness = originalLighting.Brightness
-            Lighting.ExposureCompensation = originalLighting.ExposureCompensation
-            Lighting.GlobalShadows = originalLighting.GlobalShadows
-            Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
-            Lighting.Ambient = originalLighting.Ambient
-
-            -- Orijinal Atmosphere varsa geri koy
-            local atm = Lighting:FindFirstChildOfClass("Atmosphere")
-            if atm then atm:Destroy() end
-            if originalAtmosphere then
-                originalAtmosphere:Clone().Parent = Lighting
+            for _, child in pairs(Lighting:GetChildren()) do
+                if not child:IsA("Folder") then
+                    child:Destroy()
+                end
+            end
+            for k,v in pairs(originalLighting) do
+                Lighting[k] = v
+            end
+            for _, obj in pairs(originalEffects) do
+                obj:Clone().Parent = Lighting
             end
         end
     end
