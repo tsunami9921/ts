@@ -921,11 +921,9 @@ local Coupons = {
 local success, RedeemRF = pcall(function()
     return ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.RewardsService.RF.RedeemCode
 end)
-
 if not success or not RedeemRF then
     warn("RedeemCode: we cant find RemoteFunction") -- düzeltildi
 end
-
 PacksTab:CreateButton({
     Name = "Redeem All",
     Callback = function()
