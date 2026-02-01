@@ -885,8 +885,83 @@ PacksTab:CreateToggle({
     end
 })
 
+local Coupons = {
+    "PACKS",
+    "SLS25",
+    "100kLikes",
+    "battlepass",
+    "xmas",
+    "90kLikes",
+    "80kLikes",
+    "console!",
+    "70kLikes",
+    "Part1",
+    "60kLikes",
+    "50kLikes",
+    "GKFix!",
+    "40kLikes",
+    "30KLIKES",
+    "slscomp",
+    "25klikes",
+    "49kmembers",
+    "goalsaver",
+    "goalscorer",
+    "number1soccergame",
+    "islandmapforever",
+    "Darkvaderbovin",
+    "SeniorYeet",
+    "newyears2026",
+    "veterantalking",
+    "johnsnewyear",
+    "MrCooperth",
+    "Robloxpls"
+}
 
---================ ANIMATIONS / DANCE TAB =================
+local success, RedeemRF = pcall(function()
+    return ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.RewardsService.RF.RedeemCode
+end)
+
+if not success or not RedeemRF then
+    warn("RedeemCode: we cant find RemoteFunction )
+end
+
+
+PackTab:CreateButton({
+    Name = "Redeem All",
+    Callback = function()
+        if not RedeemRF then
+            StarterGui:SetCore("SendNotification", {
+                Title = "Error",
+                Text = "Redeem RemoteFunction bulunamadı!",
+                Duration = 5
+            })
+            return
+        end
+
+        for _, code in ipairs(Coupons) do
+            task.spawn(function()
+                local ok, err = pcall(function()
+                    RedeemRF:InvokeServer(code)
+                end)
+                if ok then
+                    StarterGui:SetCore("SendNotification", {
+                        Title = "Redeem",
+                        Text = code .. " başarılı!",
+                        Duration = 3
+                    })
+                else
+                    StarterGui:SetCore("SendNotification", {
+                        Title = "Redeem Hata",
+                        Text = code .. " - " .. tostring(err),
+                        Duration = 5
+                    })
+                end
+            end)
+        end
+    end
+})
+
+
 local tAnim = Window:CreateTab("Animations / Dances","star")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -895,13 +970,13 @@ local LocalPlayer = Players.LocalPlayer
 local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = char:WaitForChild("Humanoid")
 
--- Animasyonlar listesi
+
 local animations = {
-    -- Direct Animations from ReplicatedStorage
+    
     {name="Sui", path=ReplicatedStorage.Assets.Animations.Other.Sui},
     {name="Orange Dance", path=ReplicatedStorage.Assets.Items.Celebrations["Orange Dance"]},
 
-    -- Diğerler id ve isim listesi
+    
     {id="17454350795", name="Shh - ⭐"},
     {id="118995435851830", name="God Mode Awakening🔥  - ⭐"},
     {id="13233771992", name="Take The L - ⭐"},
