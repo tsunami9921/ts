@@ -1,4 +1,4 @@
--- Maded by Tsubasa
+-- Made by Tsubasa
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -10,7 +10,173 @@ local TeleportService = game:GetService("TeleportService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
+local LogService = game:GetService("LogService")
 
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local LoadingActive = false
+
+local function StartLoadingScreen()
+	if LoadingActive then return end
+	LoadingActive = true
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LoadingScreen"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Parent = PlayerGui
+
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.fromScale(1,1)
+	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	bg.Parent = gui
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1,0,0,80)
+	title.Position = UDim2.new(0,0,0.05,0)
+	title.BackgroundTransparency = 1
+	title.Text = "TsurenStudios"
+	title.TextColor3 = Color3.fromRGB(0,170,255)
+	title.TextScaled = true
+	title.Font = Enum.Font.GothamBold
+	title.Parent = bg
+    
+	task.spawn(function()
+		while gui.Parent do
+			title.TextTransparency = 0
+			task.wait(0.6)
+			title.TextTransparency = 0.5
+			task.wait(0.6)
+		end
+	end)
+    
+	local consoleFrame = Instance.new("Frame")
+	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
+	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
+	consoleFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
+	consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
+	consoleFrame.BorderSizePixel = 2
+	consoleFrame.Parent = bg
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = consoleFrame
+
+	local consoleText = Instance.new("TextLabel")
+	consoleText.Size = UDim2.new(1,-10,1,-10)
+	consoleText.Position = UDim2.new(0,5,0,5)
+	consoleText.BackgroundTransparency = 1
+	consoleText.TextXAlignment = Enum.TextXAlignment.Left
+	consoleText.TextYAlignment = Enum.TextYAlignment.Top
+	consoleText.TextWrapped = true
+	consoleText.RichText = true
+	consoleText.Text = ""
+	consoleText.Font = Enum.Font.Code
+	consoleText.TextSize = 18
+	consoleText.TextColor3 = Color3.fromRGB(0,255,0)
+	consoleText.Parent = consoleFrame
+
+	local logs = {}
+	local function addLog(msg)
+		table.insert(logs, msg)
+		if #logs > 18 then
+			table.remove(logs,1)
+		end
+		consoleText.Text = table.concat(logs, "\n")
+	end
+
+	LogService.MessageOut:Connect(function(message, messageType)
+		addLog("> "..message)
+	end)
+    
+	local music = Instance.new("Sound")
+	music.SoundId = "rbxassetid://9045130736"
+	music.Volume = 1
+	music.Looped = false
+	music.Parent = SoundService
+	music:Play()
+    
+	task.spawn(function()
+		local fakeLogs = {
+			"Initializing TsurenHub Client...",
+			"Loading assets...",
+			"Checking environment...",
+			"Mounting services...",
+			"Preparing client...",
+			"Finalizing..."
+		}
+		for _,v in ipairs(fakeLogs) do
+			print(v)
+			task.wait(1.2)
+		end
+	end)
+    
+	task.delay(16, function()
+		music:Stop()
+		consoleText.Text = ""
+		consoleFrame.BorderSizePixel = 0
+		consoleFrame.BackgroundTransparency = 1
+
+		local heart = Instance.new("TextLabel")
+		heart.Size = UDim2.fromScale(1,1)
+		heart.Position = UDim2.new(0,0,0,0)
+		heart.BackgroundTransparency = 1
+		heart.TextColor3 = Color3.fromRGB(255,0,0)
+		heart.TextScaled = true
+		heart.Font = Enum.Font.Code
+		heart.RichText = true
+		heart.TextXAlignment = Enum.TextXAlignment.Center
+		heart.TextYAlignment = Enum.TextYAlignment.Center
+
+		local heartPattern = {
+			"0000110000110000",
+			"0011111001111100",
+			"0111111111111110",
+			"1111111111111111",
+			"1111111111111111",
+			"0111111111111110",
+			"0011111111111100",
+			"0001111111111000",
+			"0000111111110000",
+			"0000011111100000",
+			"0000001111000000",
+			"0000000110000000",
+		}
+
+		local heartText = ""
+		for _,line in ipairs(heartPattern) do
+			local row = ""
+			for c in line:gmatch(".") do
+				if c == "1" then
+					row = row.."1"
+				else
+					row = row.." "
+				end
+			end
+			heartText = heartText..row.."\n"
+		end
+
+		heart.Text = heartText
+		heart.Parent = consoleFrame
+
+		task.delay(2.5, function()
+			local goal = {Position = UDim2.new(0,0,2,0)}
+			local tween = TweenService:Create(bg, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), goal)
+			tween:Play()
+			tween.Completed:Connect(function()
+				gui:Destroy()
+				LoadingActive = false
+			end)
+		end)
+	end)
+    
+	while LoadingActive do
+		task.wait()
+	end
+end
+
+StartLoadingScreen()
+
+repeat task.wait() until not LoadingActive
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
@@ -189,7 +355,6 @@ local function joinPrivateServerSafe(code)
     end
 end
 
---================ WELCOME TAB =================
 local WelcomeTab = Window:CreateTab("Welcome","home")
 WelcomeTab:CreateLabel("Welcome to TsurenStudios Hub!")
 WelcomeTab:CreateLabel("Credit by Tsubasa | SLS")
