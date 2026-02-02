@@ -199,7 +199,6 @@ WelcomeTab:CreateParagraph({
     Content = "Features included:\n- Auto Farm & Auto Goal\n- Player Reach & Movement Modifiers\n- Ball Controls & Freeze\n- Team & Position Management\n- Weather Effects\n- Server Tools (Teleport, Private Server, Rejoin, Server Hop)\n- Advanced Barrier Collision Fixes"
 })
 
--- Stats
 local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..."})
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
@@ -268,7 +267,6 @@ function TsurenModule.TrueAutoGetBall()
     end
 end
 
--- Top bizde mi kontrolü
 local function HasBall()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     local player = game.Players.LocalPlayer
@@ -295,12 +293,11 @@ local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Modules
-local TsurenModule = TsurenModule -- yukarda zaten var
+local TsurenModule = TsurenModule
 
 -- AutoFarm state
 local AutoFarmEnabled = false
 
--- Notification Helper (CoreGui)
 local function SendNotification(title, text, duration)
     duration = duration or 3
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -686,7 +683,7 @@ local function startFly()
         elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
             vel -= Vector3.new(0, flySpeed * 0.6, 0)
         else
-            vel += Vector3.new(0, -4, 0) -- süzülme (kick-safe)
+            vel += Vector3.new(0, -4, 0)
         end
 
         
@@ -922,7 +919,7 @@ local success, RedeemRF = pcall(function()
     return ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.RewardsService.RF.RedeemCode
 end)
 if not success or not RedeemRF then
-    warn("RedeemCode: we cant find RemoteFunction") -- düzeltildi
+    warn("RedeemCode: we cant find RemoteFunction")
 end
 PacksTab:CreateButton({
     Name = "Redeem All",
@@ -999,14 +996,11 @@ local animations = {
     {id="126168053681827", name="Soon - ⭐"}
 }
 
--- Animasyon oynatma fonksiyonu
 local function playAnimation(anim)
     if anim.path then
-        -- ReplicatedStorage içindeki animation objesi
         local track = Humanoid:LoadAnimation(anim.path)
         track:Play()
     elseif anim.id then
-        -- ID ile animation oluştur
         local animation = Instance.new("Animation")
         animation.AnimationId = "rbxassetid://"..anim.id
         local track = Humanoid:LoadAnimation(animation)
@@ -1014,7 +1008,7 @@ local function playAnimation(anim)
     end
 end
 
--- Butonları ekleme
+
 for _, anim in pairs(animations) do
     tAnim:CreateButton({
         Name = anim.name,
@@ -1025,9 +1019,6 @@ for _, anim in pairs(animations) do
 end
 
 
---==================================================
--- TEAM + POSITION TAB
---==================================================
 
 local Players = game:GetService("Players")
 local Teams = game:GetService("Teams")
@@ -1036,13 +1027,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 local Knit = require(ReplicatedStorage.Packages.Knit)
 
--- Controller
 local TeamController
 pcall(function()
     TeamController = Knit.GetController("TeamController")
 end)
 
--- Positions
 local Positions = {
     "GK","CB","LB","RB",
     "CM","CDM","CAM",
@@ -1054,7 +1043,6 @@ local SelectedTeam = "Home"
 local SelectedPos = Positions[1]
 local AutoJoin = false
 
--- Join Team func
 local function JoinTeam(teamName)
     pcall(function()
         if TeamController and TeamController.JoinTeam then
@@ -1178,21 +1166,17 @@ local playerCountLabel = tGame:CreateParagraph({Title="Player Count", Content=to
 local serverTimeLabel = tGame:CreateParagraph({Title="Server Uptime", Content="0s"})
 local gameTimeLabel = tGame:CreateParagraph({Title="Game Time (since join)", Content="0s"})
 
--- Update Server Info / Player Count / Times
 RunService.Heartbeat:Connect(function()
-    -- Player count
     playerCountLabel:Set({Title="Player Count", Content=tostring(#Players:GetPlayers())})
-    -- Server Uptime
     local uptime = tick() - serverStartTime
     local mins = math.floor(uptime/60)
     local secs = math.floor(uptime%60)
     serverTimeLabel:Set({Title="Server Uptime", Content=string.format("%dm %ds", mins, secs)})
-    -- Game Time
-    local gameElapsed = os.time() - os.time() + (tick()-serverStartTime) -- basit olarak tick farkı
+    local gameElapsed = os.time() - os.time() + (tick()-serverStartTime)
     gameTimeLabel:Set({Title="Game Time", Content=string.format("%dm %ds", mins, secs)})
 end)
 
---================ REACH =================
+
 local tReach=Window:CreateTab("Reach","refresh-cw")
 local trollReach=false
 local trollDist=18
@@ -1323,7 +1307,7 @@ tWeather:CreateToggle({
 })
 
 
---================ GOAL TAB FIX =================
+
 local tGoal = Window:CreateTab("Goal Setting", "target")
 local goalEnabledHome = false
 local goalEnabledAway = false
@@ -1352,7 +1336,7 @@ local function applyGoal(team, state)
     end
 end
 
--- Toggle for Home Goal
+
 tGoal:CreateToggle({
     Name = "Enable Home Goal Hitbox",
     CurrentValue = false,
@@ -1362,7 +1346,7 @@ tGoal:CreateToggle({
     end
 })
 
--- Toggle for Away Goal
+
 tGoal:CreateToggle({
     Name = "Enable Away Goal Hitbox",
     CurrentValue = false,
@@ -1371,7 +1355,6 @@ tGoal:CreateToggle({
         applyGoal("Away", goalEnabledAway)
     end
 })
---================ SERVER =================
 local tServer=Window:CreateTab("Server","server")
 local inputGameId=""
 local inputServerId=""
@@ -1390,7 +1373,7 @@ tServer:CreateButton({Name="Server Hop", Callback=function()
     end
 end})
 
---================ ADVANCED FIXES =================
+
 local function setBarriersCollision(state)
     local field = Workspace:FindFirstChild("Stadium") and Workspace.Stadium:FindFirstChild("Field")
     if field then
@@ -1422,7 +1405,7 @@ tPlayers:CreateToggle({
     end
 })
 
---================ HEARTBEAT / MAIN LOOP =================
+
 local delta=0
 local autoGoalEnabled=false
 local autoGoalTeam="Home"
@@ -1436,7 +1419,7 @@ RunService.Heartbeat:Connect(function(dt)
     local hrp=GetHRP()
     local char=LocalPlayer.Character
 
-    -- AUTO FARM
+    
     if autoFarmEnabled and tick()-lastFarmTick>autoFarmCooldown and ball and hrp and char and isBallMine(ball) then
         local dir=(ball.Position-hrp.Position)
         if dir.Magnitude>3 then
@@ -1448,7 +1431,7 @@ RunService.Heartbeat:Connect(function(dt)
         lastFarmTick=tick()
     end
 
-    -- AUTO GOAL
+    
     if autoGoalEnabled and tick()-lastGoalTick>=autoGoalDelay then
         local goal=getGoal(autoGoalTeam)
         if ball and goal then
@@ -1458,10 +1441,10 @@ RunService.Heartbeat:Connect(function(dt)
         end
     end
 
-    -- Freeze Ball
+    
     if ball then ball.Anchored=freezeBall end
 
-    -- Stats Update
+    
     local gui=LocalPlayer.PlayerGui:FindFirstChild("GameGui")
     if gui then
         local stats=gui.LobbyHUD.Topbar.Leaderstats
@@ -1470,18 +1453,18 @@ RunService.Heartbeat:Connect(function(dt)
         xpLabel:Set({Title="XP", Content=stats.Experience.Container.Other.Text})
     end
 
-    -- Troll Reach
+    
     if trollReach and ball and hrp and (ball.Position - hrp.Position).Magnitude <= trollDist then
         ball.AssemblyLinearVelocity = hrp.CFrame.LookVector * 35
     end
 
-    -- Normal Reach (V1)
+
     if LolReach and ball and hrp and (ball.Position - hrp.Position).Magnitude <= normalDist then
         ball.AssemblyLinearVelocity = Vector3.zero
         ball.CFrame = hrp.CFrame * CFrame.new(0,0,-3)
     end
 
-    -- New Reach Visual
+    
 if newReachEnabled and hrp and char then
     if not newReachPart then
         newReachPart = Instance.new("Part")
