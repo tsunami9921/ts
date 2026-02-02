@@ -1,11 +1,9 @@
 local StarterScripts = game:GetService("StarterPlayer").StarterPlayerScripts
 
--- LocalScript yarat
 local WindController = Instance.new("LocalScript")
 WindController.Name = "WindController"
 WindController.Parent = StarterScripts
 
--- WindLines ModuleScript
 local WindLines = Instance.new("ModuleScript")
 WindLines.Name = "WindLines"
 WindLines.Source =
@@ -24,7 +22,7 @@ function module:Init(Settings)
     self.Direction = Settings.Direction or Vector3.new(1,0,0)
     self.Speed = Settings.Speed or 6
 
-    -- Eğer önceden bağlanmış bir update varsa kapat
+
     if self.UpdateConnection then
         self.UpdateConnection:Disconnect()
     end
@@ -106,9 +104,9 @@ local RunService = game:GetService("RunService")
 local Settings = require(script.Settings)
 local Octree = require(script.Octree)
 
-local COLLECTION_TAG = "WindShake" -- Tag ile otomatik takip
-local UPDATE_HZ = 1/45 -- 45 Hz’de güncelle
-local COMPUTE_HZ = 1/30 -- 30 Hz’de hesapla
+local COLLECTION_TAG = "WindShake"
+local UPDATE_HZ = 1/45
+local COMPUTE_HZ = 1/30
 
 local DEFAULT_SETTINGS = Settings.new(script, {
     WindDirection = Vector3.new(0.5,0,0.5);
@@ -136,7 +134,6 @@ local WindShake = {
     Resumed = ResumedEvent.Event;
 }
 
--- Bağlantı yardımcı fonksiyonu
 function WindShake:Connect(funcName, event)
     local callback = self[funcName]
     assert(typeof(callback) == "function", "Unknown function: "..funcName)
@@ -145,7 +142,7 @@ function WindShake:Connect(funcName, event)
     end)
 end
 
--- Obje ekleme
+
 function WindShake:AddObjectShake(object, settingsTable)
     if not (typeof(object) == "Instance" and object:IsA("BasePart")) then return end
     if self.ObjectMetadata[object] then return end
@@ -162,7 +159,6 @@ function WindShake:AddObjectShake(object, settingsTable)
     ObjectShakeAddedEvent:Fire(object)
 end
 
--- Obje kaldırma
 function WindShake:RemoveObjectShake(object)
     local objMeta = self.ObjectMetadata[object]
     if objMeta then
@@ -177,7 +173,6 @@ function WindShake:RemoveObjectShake(object)
     end
 end
 
--- Update fonksiyonu (heartbeat ile)
 function WindShake:Update()
     local now = os.clock()
     local dt = now - self.LastUpdate
@@ -254,10 +249,8 @@ function WindShake:Init()
         script:SetAttribute("WindDirection", DEFAULT_SETTINGS.WindDirection)
     end
 
-    -- Temizlik
     self:Cleanup()
 
-    -- Tag ile objeleri ekle
     self.AddedConnection = self:Connect("AddObjectShake", CollectionService:GetInstanceAddedSignal(COLLECTION_TAG))
     self.RemovedConnection = self:Connect("RemoveObjectShake", CollectionService:GetInstanceRemovedSignal(COLLECTION_TAG))
     for _, object in pairs(CollectionService:GetTagged(COLLECTION_TAG)) do
@@ -306,7 +299,7 @@ return WindShake
 ]]
 WindShake.Parent = WindController
 
--- Settings ModuleScript WindShake içinde
+
 local Settings = Instance.new("ModuleScript")
 Settings.Name = "Settings"
 Settings.Source =
@@ -321,7 +314,6 @@ local SettingTypes = {
 function Settings.new(object, base)
     local inst = {}
 
-    -- Başlangıç değerleri
     local WindPower = object:GetAttribute("WindPower")
     local WindSpeed = object:GetAttribute("WindSpeed")
     local WindDirection = object:GetAttribute("WindDirection")
@@ -330,7 +322,7 @@ function Settings.new(object, base)
     inst.WindSpeed = typeof(WindSpeed) == SettingTypes.WindSpeed and WindSpeed or base.WindSpeed
     inst.WindDirection = typeof(WindDirection) == SettingTypes.WindDirection and WindDirection or base.WindDirection
 
-    -- Attribute değişikliklerini dinle
+    
     local PowerConnection = object:GetAttributeChangedSignal("WindPower"):Connect(function()
         local newPower = object:GetAttribute("WindPower")
         inst.WindPower = typeof(newPower) == SettingTypes.WindPower and newPower or base.WindPower
@@ -346,7 +338,7 @@ function Settings.new(object, base)
         inst.WindDirection = typeof(newDir) == SettingTypes.WindDirection and newDir or base.WindDirection
     end)
 
-    -- Temizlik fonksiyonu
+    
     function inst:Destroy()
         PowerConnection:Disconnect()
         SpeedConnection:Disconnect()
@@ -360,7 +352,7 @@ end
 return Settings
 Settings.Parent = WindShake
 
--- Octree ModuleScript WindShake içinde
+
 local Octree = Instance.new("ModuleScript")
 Octree.Name = "Octree"
 Octree.Source =
@@ -515,7 +507,7 @@ end
 return Octree
 Octree.Parent = WindShake
 
--- Octree alt modüller
+
 local OctreeNode = Instance.new("ModuleScript")
 OctreeNode.Name = "OctreeNode"
 OctreeNode.Source =
@@ -635,7 +627,6 @@ local SUB_REGION_POSITION_OFFSET = {
     {-0.25, -0.25, 0.25};
 }
 
--- Recursive search helper
 local function GetNeighborsWithinRadius(Region, Radius, PositionX, PositionY, PositionZ, ObjectsFound, NodeDistances2, MaxDepth, ObjectsLength, DistancesLength)
     if not MaxDepth then error("Missing MaxDepth.") end
     local SearchRadius = Radius + SQRT_3_OVER_2 * (Region.Size[1]/2)
@@ -673,140 +664,4 @@ OctreeRegionUtils.GetNeighborsWithinRadius = GetNeighborsWithinRadius
 return OctreeRegionUtils
 OctreeRegionUtils.Parent = Octree
 
-print("WindController ve tüm modüller full Instance.new ile oluşturuldu!")
-
-
--- // Services
-local Players = game:GetService("Players")
-local Lighting = game:GetService("Lighting")
-local StarterPlayer = game:GetService("StarterPlayer")
-local StarterScripts = StarterPlayer.StarterPlayerScripts
-local RunService = game:GetService("RunService")
-
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
--- // Rayfield Loadstring
-local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-end)
-
-if not success then
-    warn("Rayfield yüklenemedi!")
-    return
-end
-
--- // WindController Referansı
-local WindController = StarterScripts:FindFirstChild("WindController")
-if not WindController then
-    warn("WindController bulunamadı!")
-    return
-end
-
--- require modüller
-local WindLinesModule = require(WindController:WaitForChild("WindLines"))
-local WindShakeModule = require(WindController:WaitForChild("WindShake"))
-
--- // Rayfield window
-local Window = Rayfield:CreateWindow({
-    Name = "Wind & Lighting Control",
-    LoadingTitle = "Başlatılıyor...",
-    LoadingSubtitle = "Wind ve Lighting Scriptleri",
-    ConfigurationSaving = {
-        Enabled = false,
-        FolderName = nil,
-        FileName = "WindLightingConfig"
-    }
-})
-
--- // Wind toggle
-local WindEnabled = false
-Window:CreateToggle({
-    Name = "Enable Wind",
-    CurrentValue = false,
-    Flag = "WindToggle",
-    Callback = function(value)
-        WindEnabled = value
-        if WindEnabled then
-            -- WindLines başlat
-            WindLinesModule:Init({
-                Lifetime = 3,
-                Speed = 6,
-                Direction = Vector3.new(1,0,0)
-            })
-            -- Örnek: her Heartbeat’de rastgele WindLine üret
-            if not WindController:FindFirstChild("WindLoopConnection") then
-                local loop = RunService.Heartbeat:Connect(function()
-                    WindLinesModule:Create({
-                        Speed = 6,
-                        Direction = Vector3.new(1,0,0)
-                    })
-                end)
-                loop.Name = "WindLoopConnection"
-                loop.Parent = WindController
-            end
-
-            -- WindShake başlat
-            WindShakeModule:Init()
-            WindShakeModule:Resume()
-            print("Wind aktif")
-        else
-            -- WindLines durdur
-            if WindController:FindFirstChild("WindLoopConnection") then
-                WindController.WindLoopConnection:Disconnect()
-                WindController.WindLoopConnection:Destroy()
-            end
-
-            -- WindShake durdur
-            WindShakeModule:Pause()
-            print("Wind devre dışı")
-        end
-    end
-})
-
--- // Lighting toggle
-local LightingEnabled = false
-Window:CreateToggle({
-    Name = "Enable Lighting",
-    CurrentValue = false,
-    Flag = "LightingToggle",
-    Callback = function(value)
-        LightingEnabled = value
-        if LightingEnabled then
-            -- Efektleri ekle
-            local Sun = Lighting:FindFirstChildOfClass("SunRaysEffect") or Instance.new("SunRaysEffect")
-            Sun.Intensity = 0.25
-            Sun.Parent = Lighting
-
-            local Bloom = Lighting:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect")
-            Bloom.Intensity = 1
-            Bloom.Threshold = 0.5
-            Bloom.Parent = Lighting
-
-            local Sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky")
-            Sky.SkyboxUp = "rbxassetid://1234567"
-            Sky.SkyboxDn = "rbxassetid://1234567"
-            Sky.SkyboxLf = "rbxassetid://1234567"
-            Sky.SkyboxRt = "rbxassetid://1234567"
-            Sky.SkyboxFt = "rbxassetid://1234567"
-            Sky.SkyboxBk = "rbxassetid://1234567"
-            Sky.Parent = Lighting
-
-            Lighting.GlobalShadows = true
-            Lighting.ClockTime = 14
-            Lighting.OutdoorAmbient = Color3.fromRGB(128,128,128)
-            print("Lighting aktif")
-        else
-            -- Efektleri temizle
-            for _, child in pairs(Lighting:GetChildren()) do
-                if child:IsA("SunRaysEffect") or child:IsA("BloomEffect") or child:IsA("Sky") then
-                    child:Destroy()
-                end
-            end
-            Lighting.GlobalShadows = false
-            print("Lighting devre dışı")
-        end
-    end
-})
-
-print("Rayfield GUI hazır! Wind ve Lighting toggle edebilirsiniz.")
+-- made by Tsubasa 
