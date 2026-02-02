@@ -713,7 +713,7 @@ local Window = Rayfield:CreateWindow({
     LoadingTitle = "Başlatılıyor...",
     LoadingSubtitle = "Wind ve Lighting Scriptleri",
     ConfigurationSaving = {
-        Enabled = true,
+        Enabled = false,
         FolderName = nil,
         FileName = "WindLightingConfig"
     }
