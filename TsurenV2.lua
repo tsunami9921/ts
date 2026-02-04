@@ -1893,9 +1893,7 @@ TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 
 	if msg:lower() == ";t unverify" then
 		VerifyEnabled = false
-		if VerifyEnabled = true
-			then do VerifyEnabled = false
-				return nil
+		return nil
 	end
 
 	if VerifyEnabled then
