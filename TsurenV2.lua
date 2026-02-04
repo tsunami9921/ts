@@ -1647,3 +1647,228 @@ if newReachEnabled and hrp and char then
     newReachPart.CFrame = hrp.CFrame
   end
 end)
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- ================= MUSIC LIST =================
+local MusicList = {
+	["Stay With Me"] = 137717310854691,
+	["Gondor Theme"] = 9123456789,
+	["Night Drive"] = 8234567891,
+	["Lonely"] = 7345678912,
+	["Memory"] = 6456789123
+}
+
+local function normalize(str)
+	return string.lower(string.gsub(str or "","[%s%-_]",""))
+end
+
+-- ================= SOUND =================
+local MusicSound = Instance.new("Sound")
+MusicSound.Volume = 0.6
+MusicSound.Parent = SoundService
+
+-- Bass + Compressor (FIXED)
+local EQ = Instance.new("EqualizerSoundEffect")
+EQ.LowGain = 8
+EQ.MidGain = 0
+EQ.HighGain = -3
+EQ.Parent = MusicSound
+
+local Compressor
+pcall(function()
+	Compressor = Instance.new("CompressorSoundEffect")
+	Compressor.Threshold = -30
+	Compressor.Ratio = 4
+	Compressor.MakeupGain = 3
+	Compressor.Parent = MusicSound
+end)
+
+local function ToggleBass(on)
+	pcall(function()
+		EQ.Enabled = on
+		if Compressor then
+			Compressor.Enabled = on
+		end
+	end)
+end
+
+-- ================= GUI =================
+local gui = Instance.new("ScreenGui",PlayerGui)
+gui.Name = "MusicAdmin"
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame",gui)
+main.Size = UDim2.fromScale(0.42,0.32)
+main.Position = UDim2.fromScale(0.29,0.25)
+main.BackgroundColor3 = Color3.fromRGB(15,15,20)
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,10)
+
+-- Drag GUI
+do
+	local dragging, dragStart, startPos
+	main.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = i.Position
+			startPos = main.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+			local delta = i.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+end
+
+-- Title
+local title = Instance.new("TextLabel",main)
+title.Size = UDim2.new(1,0,0,38)
+title.BackgroundTransparency = 1
+title.Text = "TsurenStudios | Music Admin"
+title.TextColor3 = Color3.fromRGB(0,170,255)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+-- TextBox
+local box = Instance.new("TextBox",main)
+box.Size = UDim2.new(0.9,0,0,36)
+box.Position = UDim2.fromScale(0.05,0.27)
+box.PlaceholderText = "Made By | Tsubasa"
+box.Text = ""
+box.TextColor3 = Color3.new(1,1,1)
+box.BackgroundColor3 = Color3.fromRGB(25,25,30)
+box.Font = Enum.Font.Code
+box.TextSize = 16
+box.ClearTextOnFocus = false
+Instance.new("UICorner",box).CornerRadius = UDim.new(0,8)
+
+-- Music List Buttons
+local listFrame = Instance.new("Frame",main)
+listFrame.Size = UDim2.new(0.6,0,0.39,0)
+listFrame.Position = UDim2.fromScale(0.06,0.50)
+listFrame.BackgroundTransparency = 1
+local layout = Instance.new("UIListLayout",listFrame)
+layout.Padding = UDim.new(0,4)
+
+local function clearButtons()
+	for _,v in ipairs(listFrame:GetChildren()) do
+		if v:IsA("TextButton") then v:Destroy() end
+	end
+end
+
+local function createButton(name)
+	local b = Instance.new("TextButton",listFrame)
+	b.Size = UDim2.new(1,0,0,24)
+	b.BackgroundColor3 = Color3.fromRGB(20,30,45)
+	b.TextColor3 = Color3.fromRGB(0,170,255)
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 12
+	b.Text = name
+	Instance.new("UICorner",b).CornerRadius = UDim.new(0,6)
+	b.MouseButton1Click:Connect(function()
+		box.Text = "play "..name
+		clearButtons()
+	end)
+end
+
+-- Autocomplete MusicList
+box:GetPropertyChangedSignal("Text"):Connect(function()
+	clearButtons()
+	local words = {}
+	for w in box.Text:gmatch("%S+") do table.insert(words,w) end
+	local last = words[#words] or ""
+	local key = normalize(last)
+	if key == "" then return end
+
+	if normalize(words[1]) == "play" then
+		for name,_ in pairs(MusicList) do
+			if normalize(name):find(key,1,true) then
+				createButton(name)
+			end
+		end
+	end
+end)
+
+-- ================= COMMAND EXEC =================
+box.FocusLost:Connect(function(enter)
+	if not enter then return end
+	local cmd,args = box.Text:match("^(%S+)%s*(.*)$")
+	if not cmd then return end
+	cmd = cmd:lower()
+	if cmd == "play" then
+		for name,id in pairs(MusicList) do
+			if normalize(name) == normalize(args) then
+				MusicSound.SoundId = "rbxassetid://"..id
+				MusicSound:Play()
+			end
+		end
+	elseif cmd == "stop" then
+		MusicSound:Stop()
+	elseif cmd == "pause" then
+		MusicSound:Pause()
+	elseif cmd == "resume" then
+		MusicSound:Resume()
+	elseif cmd == "volume" then
+		local v = tonumber(args)
+		if v then MusicSound.Volume = math.clamp(v,0,1) end
+	elseif cmd == "bass" then
+		ToggleBass(args == "on")
+	end
+end)
+
+-- ================= TIME DISPLAY =================
+local timeLabel = Instance.new("TextLabel",main)
+timeLabel.Size = UDim2.new(0,120,0,18)
+timeLabel.Position = UDim2.fromScale(0.5,0.9)
+timeLabel.AnchorPoint = Vector2.new(0.5,0.5)
+timeLabel.BackgroundTransparency = 1
+timeLabel.Font = Enum.Font.Code
+timeLabel.TextSize = 14
+timeLabel.TextColor3 = Color3.fromRGB(200,200,200)
+timeLabel.Text = "Waiting Music..."
+
+RunService.RenderStepped:Connect(function()
+	if MusicSound.IsLoaded then
+		timeLabel.Text = string.format("%02d:%02d / %02d:%02d",
+			MusicSound.TimePosition//60, MusicSound.TimePosition%60,
+			MusicSound.TimeLength//60, MusicSound.TimeLength%60)
+	end
+end)
+
+-- ================= VISUALIZER =================
+local vis = Instance.new("Frame",main)
+vis.Size = UDim2.new(0.9,0,0,6)
+vis.Position = UDim2.fromScale(0.05,0.92)
+vis.BackgroundTransparency = 1
+
+local bars = {}
+for i=1,20 do
+	local bar = Instance.new("Frame",vis)
+	bar.Size = UDim2.new(0.04,0,0.2,0)
+	bar.Position = UDim2.fromScale((i-1)*0.05,0.5)
+	bar.AnchorPoint = Vector2.new(0,0.5)
+	bar.BackgroundColor3 = Color3.fromHSV(i/20,1,1)
+	bars[i] = bar
+end
+
+RunService.RenderStepped:Connect(function()
+	if MusicSound.IsPlaying then
+		local l = MusicSound.PlaybackLoudness / 500
+		for i,b in ipairs(bars) do
+			b.Size = UDim2.new(0.04,0,math.clamp(l*(i/20),0.1,1),0)
+		end
+	end
+end)
