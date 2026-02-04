@@ -1642,7 +1642,7 @@ if newReachEnabled and hrp and char then
         newReachPart.CanCollide = false
         newReachPart.Material = Enum.Material.Neon
         newReachPart.Color = Color3.fromRGB(255,0,0)
-        newReachPart.Parent = Workspace -- Parent Workspace to avoid issues
+        newReachPart.Parent = Workspace
     end
     newReachPart.CFrame = hrp.CFrame
   end
@@ -1656,7 +1656,6 @@ local SoundService = game:GetService("SoundService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
--- ================= MUSIC LIST =================
 local MusicList = {
 	["Stay With Me"] = 137717310854691,
 	["Gondor Theme"] = 9123456789,
@@ -1669,12 +1668,10 @@ local function normalize(str)
 	return string.lower(string.gsub(str or "","[%s%-_]",""))
 end
 
--- ================= SOUND =================
 local MusicSound = Instance.new("Sound")
 MusicSound.Volume = 0.6
 MusicSound.Parent = SoundService
 
--- Bass + Compressor (FIXED)
 local EQ = Instance.new("EqualizerSoundEffect")
 EQ.LowGain = 8
 EQ.MidGain = 0
@@ -1699,7 +1696,6 @@ local function ToggleBass(on)
 	end)
 end
 
--- ================= GUI =================
 local gui = Instance.new("ScreenGui",PlayerGui)
 gui.Name = "MusicAdmin"
 gui.ResetOnSpawn = false
@@ -1710,7 +1706,6 @@ main.Position = UDim2.fromScale(0.29,0.25)
 main.BackgroundColor3 = Color3.fromRGB(15,15,20)
 Instance.new("UICorner",main).CornerRadius = UDim.new(0,10)
 
--- Drag GUI
 do
 	local dragging, dragStart, startPos
 	main.InputBegan:Connect(function(i)
@@ -1733,7 +1728,6 @@ do
 	end)
 end
 
--- Title
 local title = Instance.new("TextLabel",main)
 title.Size = UDim2.new(1,0,0,38)
 title.BackgroundTransparency = 1
@@ -1742,7 +1736,6 @@ title.TextColor3 = Color3.fromRGB(0,170,255)
 title.Font = Enum.Font.GothamBold
 title.TextScaled = true
 
--- TextBox
 local box = Instance.new("TextBox",main)
 box.Size = UDim2.new(0.9,0,0,36)
 box.Position = UDim2.fromScale(0.05,0.27)
@@ -1755,7 +1748,6 @@ box.TextSize = 16
 box.ClearTextOnFocus = false
 Instance.new("UICorner",box).CornerRadius = UDim.new(0,8)
 
--- Music List Buttons
 local listFrame = Instance.new("Frame",main)
 listFrame.Size = UDim2.new(0.6,0,0.39,0)
 listFrame.Position = UDim2.fromScale(0.06,0.50)
@@ -1784,7 +1776,6 @@ local function createButton(name)
 	end)
 end
 
--- Autocomplete MusicList
 box:GetPropertyChangedSignal("Text"):Connect(function()
 	clearButtons()
 	local words = {}
@@ -1802,7 +1793,6 @@ box:GetPropertyChangedSignal("Text"):Connect(function()
 	end
 end)
 
--- ================= COMMAND EXEC =================
 box.FocusLost:Connect(function(enter)
 	if not enter then return end
 	local cmd,args = box.Text:match("^(%S+)%s*(.*)$")
@@ -1829,7 +1819,6 @@ box.FocusLost:Connect(function(enter)
 	end
 end)
 
--- ================= TIME DISPLAY =================
 local timeLabel = Instance.new("TextLabel",main)
 timeLabel.Size = UDim2.new(0,120,0,18)
 timeLabel.Position = UDim2.fromScale(0.5,0.9)
@@ -1848,7 +1837,6 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
--- ================= VISUALIZER =================
 local vis = Instance.new("Frame",main)
 vis.Size = UDim2.new(0.9,0,0,6)
 vis.Position = UDim2.fromScale(0.05,0.92)
@@ -1872,3 +1860,51 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 end)
+
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+
+local VerifyEnabled = false
+
+local VERIFY_ICON = utf8.char(0xE000)
+
+TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
+	local props = Instance.new("TextChatMessageProperties")
+
+	if not chatMessage.TextSource then
+		return props
+	end
+
+	if chatMessage.TextSource.UserId ~= LocalPlayer.UserId then
+		return props
+	end
+
+	local msg = chatMessage.Text
+	if not msg then
+		return props
+	end
+
+	if msg:lower() == ";t verify" then
+		VerifyEnabled = true
+		return nil
+	end
+
+	if msg:lower() == ";t unverify" then
+		VerifyEnabled = false
+		if VerifyEnabled = true
+			then do VerifyEnabled = false
+				return nil
+	end
+
+	if VerifyEnabled then
+		props.PrefixText = string.gsub(
+			chatMessage.PrefixText,
+			":$",
+			VERIFY_ICON .. ":"
+		)
+	end
+
+	return props
+end
