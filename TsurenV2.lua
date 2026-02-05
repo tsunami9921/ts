@@ -974,33 +974,12 @@ UIS.InputBegan:Connect(function(i,gp)
     end
 end)
 
--- ================================
--- TSURENSTUDIOS | PACKS + REDEEM
--- FULL FIXED VERSION
--- ================================
-
--- SERVICES
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui")
 
 local LocalPlayer = Players.LocalPlayer
 
--- ================================
--- RAYFIELD
--- ================================
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
-local Window = Rayfield:CreateWindow({
-	Name = "TsurenStudios | Packs",
-	LoadingTitle = "TsurenStudios",
-	LoadingSubtitle = "Packs & Redeem System",
-	Theme = "Dark"
-})
-
--- ================================
--- KNIT + DATA
--- ================================
 local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
 local PacksService = Knit.GetService("PacksService")
 
@@ -1015,9 +994,6 @@ local Enums = require(
 		:WaitForChild("Enums")
 )
 
--- ================================
--- PACK LIST
--- ================================
 local PackTypes = {}
 for name in pairs(PacksData.ItemData) do
 	table.insert(PackTypes, name)
@@ -1029,9 +1005,6 @@ local SelectedCurrency = "Points"
 local AutoBuy = false
 local Buying = false
 
--- ================================
--- CURRENCY MAP
--- ================================
 local CurrencyMap = {
 	["Points"] = Enums.Currency.Primary,
 	["Coins"] = Enums.Currency.Primary, -- fallback (oyunda coins yok)
@@ -1039,9 +1012,6 @@ local CurrencyMap = {
 	["Robux"] = "Robux"
 }
 
--- ================================
--- RESOLVE OPTION (UPDATE SAFE)
--- ================================
 local function ResolvePurchaseOption(packName, wanted)
 	local pack = PacksData.ItemData[packName]
 	if not pack then return nil end
@@ -1064,9 +1034,6 @@ local function ResolvePurchaseOption(packName, wanted)
 	return nil
 end
 
--- ================================
--- BUY PACK
--- ================================
 local function BuyPack()
 	if Buying then return end
 	Buying = true
@@ -1075,7 +1042,7 @@ local function BuyPack()
 	if not option then
 		Rayfield:Notify({
 			Title = "Pack Error",
-			Content = "Bu pack için uygun para tipi yok!",
+			Content = "There is no suitable currency for this pack.",
 			Duration = 4
 		})
 		Buying = false
