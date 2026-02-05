@@ -1892,45 +1892,53 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
+
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
-
-local function handleCommand(msg)
-	msg = msg:lower()
-
-	if msg == ";t close" then
-		gui.Enabled = false
-	elseif msg == ";t open" then
-		gui.Enabled = true
-	end
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local gui = PlayerGui:WaitForChild("TsurenStudios", 5)
+if not gui then
+	warn("GUI bulunamadı!")
 end
 
-pcall(function()
-	TextChatService.OnIncomingMessage = function(message)
-		if message.TextSource 
-			and message.TextSource.UserId == player.UserId then
-			handleCommand(message.Text)
-		end
-	end
-end)
-
-pcall(function()
-	player.Chatted:Connect(function(msg)
-		handleCommand(msg)
-	end)
-end)
+local VERIFY_ICON = utf8.char(0xE000)
 local VerifyEnabled = false
 
-local VERIFY_ICON = utf8.char(0xE000)
+local function HandleCommand(text)
+	text = text:lower()
+
+	if text == ";t close" and gui then
+		gui.Enabled = false
+		return true
+	end
+
+	if text == ";t open" and gui then
+		gui.Enabled = true
+		return true
+	end
+
+	if text == ";t verify" then
+		VerifyEnabled = true
+		return true
+	end
+
+	if text == ";t unverify" then
+		VerifyEnabled = false
+		return true
+	end
+
+	return false
+end
 
 TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 	local props = Instance.new("TextChatMessageProperties")
 
-	if not chatMessage or not chatMessage.TextSource then
+	if not chatMessage.TextSource then
 		return props
 	end
+
 	if chatMessage.TextSource.UserId ~= LocalPlayer.UserId then
 		return props
 	end
@@ -1940,24 +1948,12 @@ TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 		return props
 	end
 
-	local lower = text:lower()
-	
-	if lower == ";t verify" then
-		VerifyEnabled = true
-
+	if HandleCommand(text) then
 		props.Text = ""
 		props.PrefixText = ""
 		return props
 	end
 
-	if lower == ";t unverify" then
-		VerifyEnabled = false
-
-		props.Text = ""
-		props.PrefixText = ""
-		return props
-	end
-	
 	if VerifyEnabled then
 		props.PrefixText = string.gsub(
 			chatMessage.PrefixText,
