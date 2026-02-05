@@ -1868,55 +1868,100 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-local vis = Instance.new("Frame",main)
-vis.Size = UDim2.new(0.9,0,0,6)
-vis.Position = UDim2.fromScale(0.05,0.92)
-vis.BackgroundTransparency = 1
 
-local bars = {}
-for i=1,20 do
-	local bar = Instance.new("Frame",vis)
-	bar.Size = UDim2.new(0.04,0,0.2,0)
-	bar.Position = UDim2.fromScale((i-1)*0.05,0.5)
-	bar.AnchorPoint = Vector2.new(0,0.5)
-	bar.BackgroundColor3 = Color3.fromHSV(i/20,1,1)
+vis:ClearAllChildren()
+bars = {}
+
+local BAR_COUNT = 32
+local RADIUS = 70
+local CENTER = Vector2.new(0.5, 0.5)
+
+for i = 1, BAR_COUNT do
+	local bar = Instance.new("Frame", vis)
+	bar.AnchorPoint = Vector2.new(0.5, 1)
+	bar.Size = UDim2.new(0, 6, 0, 10)
+	bar.BackgroundColor3 = Color3.fromHSV(i / BAR_COUNT, 1, 1)
+	bar.BorderSizePixel = 0
+
+	local angle = math.rad((i / BAR_COUNT) * 360)
+	bar.Position = UDim2.fromScale(
+		CENTER.X + math.cos(angle) * 0.35,
+		CENTER.Y + math.sin(angle) * 0.35
+	)
+	bar.Rotation = math.deg(angle)
+
+	Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
 	bars[i] = bar
 end
 
 RunService.RenderStepped:Connect(function()
-	if MusicSound.IsPlaying then
-		local l = MusicSound.PlaybackLoudness / 500
-		for i,b in ipairs(bars) do
-			b.Size = UDim2.new(0.04,0,math.clamp(l*(i/20),0.1,1),0)
-		end
+	if not MusicSound.IsPlaying then return end
+
+	local loud = math.clamp(MusicSound.PlaybackLoudness / 600, 0.1, 2)
+
+	for i, bar in ipairs(bars) do
+		local height = loud * (i / BAR_COUNT) * 60
+		bar.Size = UDim2.new(0, 6, 0, height)
+
+		bar.BackgroundColor3 = Color3.fromHSV(
+			(tick() * 0.3 + i / BAR_COUNT) % 1,
+			1,
+			1
+		)
 	end
+
+	main.Position = main.Position:Lerp(
+		UDim2.new(
+			main.Position.X.Scale,
+			main.Position.X.Offset + math.random(-loud*2, loud*2),
+			main.Position.Y.Scale,
+			main.Position.Y.Offset + math.random(-loud*2, loud*2)
+		),
+		0.15
+	)
 end)
 
 
--- =====================================
--- TSUREN STUDIOS | LOCAL VERIFY COMMAND (FIXED)
--- =====================================
 
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Verify durumu
+local function handleCommand(msg)
+	msg = msg:lower()
+
+	if msg == ";t close" then
+		gui.Enabled = false
+	elseif msg == ";t open" then
+		gui.Enabled = true
+	end
+end
+
+pcall(function()
+	TextChatService.OnIncomingMessage = function(message)
+		if message.TextSource 
+			and message.TextSource.UserId == player.UserId then
+			handleCommand(message.Text)
+		end
+	end
+end)
+
+pcall(function()
+	player.Chatted:Connect(function(msg)
+		handleCommand(msg)
+	end)
+end)
 local VerifyEnabled = false
 
--- Private-use icon (Roblox uyumlu)
 local VERIFY_ICON = utf8.char(0xE000)
 
 TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 	local props = Instance.new("TextChatMessageProperties")
 
-	-- Güvenlik kontrolleri
 	if not chatMessage or not chatMessage.TextSource then
 		return props
 	end
-
-	-- Sadece LocalPlayer
 	if chatMessage.TextSource.UserId ~= LocalPlayer.UserId then
 		return props
 	end
@@ -1927,12 +1972,10 @@ TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 	end
 
 	local lower = text:lower()
-
-	-- ================= COMMANDS =================
+	
 	if lower == ";t verify" then
 		VerifyEnabled = true
 
-		-- Komutu gizle (ERRORSIZ YÖNTEM)
 		props.Text = ""
 		props.PrefixText = ""
 		return props
@@ -1941,13 +1984,11 @@ TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 	if lower == ";t unverify" then
 		VerifyEnabled = false
 
-		-- Komutu gizle
 		props.Text = ""
 		props.PrefixText = ""
 		return props
 	end
-
-	-- ================= VERIFY PREFIX =================
+	
 	if VerifyEnabled then
 		props.PrefixText = string.gsub(
 			chatMessage.PrefixText,
