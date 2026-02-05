@@ -99,7 +99,7 @@ local function StartLoadingScreen()
 
 	task.spawn(function()
 		local fakeLogs = {
-			"Initializing Tsuren Engine...",
+			"Initializing TsurenStudios Client...",
 			"Loading assets...",
 			"Checking environment...",
 			"Mounting services...",
@@ -974,150 +974,218 @@ UIS.InputBegan:Connect(function(i,gp)
     end
 end)
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- ================================
+-- TSURENSTUDIOS | PACKS + REDEEM
+-- FULL FIXED VERSION
+-- ================================
 
-local Knit = require(ReplicatedStorage.Packages.Knit)
+-- SERVICES
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- ================================
+-- RAYFIELD
+-- ================================
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local Window = Rayfield:CreateWindow({
+	Name = "TsurenStudios | Packs",
+	LoadingTitle = "TsurenStudios",
+	LoadingSubtitle = "Packs & Redeem System",
+	Theme = "Dark"
+})
+
+-- ================================
+-- KNIT + DATA
+-- ================================
+local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
 local PacksService = Knit.GetService("PacksService")
 
-local PacksData = require(ReplicatedStorage.Shared.Defaults.Packs)
+local PacksData = require(
+	ReplicatedStorage:WaitForChild("Shared")
+		:WaitForChild("Defaults")
+		:WaitForChild("Packs")
+)
 
+local Enums = require(
+	ReplicatedStorage:WaitForChild("Shared")
+		:WaitForChild("Enums")
+)
 
+-- ================================
+-- PACK LIST
+-- ================================
 local PackTypes = {}
-for name,_ in pairs(PacksData.ItemData) do
-    table.insert(PackTypes, name)
+for name in pairs(PacksData.ItemData) do
+	table.insert(PackTypes, name)
 end
 table.sort(PackTypes)
 
-
 local SelectedPack = PackTypes[1]
+local SelectedCurrency = "Points"
 local AutoBuy = false
 local Buying = false
 
+-- ================================
+-- CURRENCY MAP
+-- ================================
+local CurrencyMap = {
+	["Points"] = Enums.Currency.Primary,
+	["Coins"] = Enums.Currency.Primary, -- fallback (oyunda coins yok)
+	["SkillPoints"] = "SkillPoints",
+	["Robux"] = "Robux"
+}
 
-local function BuyPack()
-    if Buying then return end
-    Buying = true
+-- ================================
+-- RESOLVE OPTION (UPDATE SAFE)
+-- ================================
+local function ResolvePurchaseOption(packName, wanted)
+	local pack = PacksData.ItemData[packName]
+	if not pack then return nil end
 
-    pcall(function()
-        PacksService:ProcessPurchase(SelectedPack, "Coins")
-    end)
+	local mapped = CurrencyMap[wanted]
+	if pack.PurchaseOptions[mapped] then
+		return mapped
+	end
 
-    task.wait(1.2)
-    Buying = false
+	if pack.PurchaseOptions[Enums.Currency.Primary] then
+		return Enums.Currency.Primary
+	end
+	if pack.PurchaseOptions.SkillPoints then
+		return "SkillPoints"
+	end
+	if pack.PurchaseOptions.Robux then
+		return "Robux"
+	end
+
+	return nil
 end
 
+-- ================================
+-- BUY PACK
+-- ================================
+local function BuyPack()
+	if Buying then return end
+	Buying = true
 
+	local option = ResolvePurchaseOption(SelectedPack, SelectedCurrency)
+	if not option then
+		Rayfield:Notify({
+			Title = "Pack Error",
+			Content = "Bu pack için uygun para tipi yok!",
+			Duration = 4
+		})
+		Buying = false
+		return
+	end
+
+	pcall(function()
+		PacksService:ProcessPurchase(SelectedPack, option)
+	end)
+
+	task.wait(1)
+	Buying = false
+end
+
+-- AUTO BUY LOOP
 task.spawn(function()
-    while task.wait(2) do
-        if AutoBuy and not Buying then
-            BuyPack()
-        end
-    end
+	while task.wait(2) do
+		if AutoBuy and not Buying then
+			BuyPack()
+		end
+	end
 end)
 
+-- ================================
+-- REDEEM CODES
+-- ================================
+local Coupons = {
+	"PACKS","SLS25","100kLikes","battlepass","xmas","90kLikes","80kLikes",
+	"console!","70kLikes","Part1","60kLikes","50kLikes","GKFix!",
+	"40kLikes","30KLIKES","slscomp","25klikes","49kmembers",
+	"goalsaver","goalscorer","number1soccergame","islandmapforever",
+	"Darkvaderbovin","SeniorYeet","newyears2026","veterantalking",
+	"johnsnewyear","MrCooperth","Robloxpls"
+}
 
+local RedeemRF
+pcall(function()
+	RedeemRF =
+		ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"]
+			.knit.Services.RewardsService.RF.RedeemCode
+end)
+
+-- ================================
+-- UI
+-- ================================
 local PacksTab = Window:CreateTab("Packs", "shopping-cart")
 
 PacksTab:CreateDropdown({
-    Name = "Pack",
-    Options = PackTypes,
-    CurrentOption = SelectedPack,
-    Callback = function(v)
-        if type(v) == "table" then
-            SelectedPack = v[1]
-        else
-            SelectedPack = v
-        end
-    end
+	Name = "Pack",
+	Options = PackTypes,
+	CurrentOption = SelectedPack,
+	Callback = function(v)
+		SelectedPack = type(v) == "table" and v[1] or v
+	end
+})
+
+PacksTab:CreateDropdown({
+	Name = "Currency",
+	Options = {"Points", "Coins", "SkillPoints", "Robux"},
+	CurrentOption = SelectedCurrency,
+	Callback = function(v)
+		SelectedCurrency = type(v) == "table" and v[1] or v
+	end
 })
 
 PacksTab:CreateButton({
-    Name = "Buy Pack",
-    Callback = function()
-        BuyPack()
-    end
+	Name = "Buy Pack",
+	Callback = BuyPack
 })
 
 PacksTab:CreateToggle({
-    Name = "Auto Buy",
-    CurrentValue = false,
-    Callback = function(v)
-        AutoBuy = v
-    end
+	Name = "Auto Buy",
+	CurrentValue = false,
+	Callback = function(v)
+		AutoBuy = v
+	end
 })
 
-local StarterGui = game:GetService("StarterGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RedeemTab = Window:CreateTab("Redeem", "gift")
 
-local Coupons = {"PACKS",
-    "SLS25",
-    "100kLikes",
-    "battlepass",
-    "xmas",
-    "90kLikes",
-    "80kLikes",
-    "console!",
-    "70kLikes",
-    "Part1",
-    "60kLikes",
-    "50kLikes",
-    "GKFix!",
-    "40kLikes",
-    "30KLIKES",
-    "slscomp",
-    "25klikes",
-    "49kmembers",
-    "goalsaver",
-    "goalscorer",
-    "number1soccergame",
-    "islandmapforever",
-    "Darkvaderbovin",
-    "SeniorYeet",
-    "newyears2026",
-    "veterantalking",
-    "johnsnewyear",
-    "MrCooperth",
-    "Robloxpls"
-}
+RedeemTab:CreateButton({
+	Name = "Redeem All Codes",
+	Callback = function()
+		if not RedeemRF then
+			StarterGui:SetCore("SendNotification", {
+				Title = "Error",
+				Text = "Redeem: can't found RemoteFunction! for Codes",
+				Duration = 5
+			})
+			return
+		end
 
-local success, RedeemRF = pcall(function()
-    return ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.RewardsService.RF.RedeemCode
-end)
-if not success or not RedeemRF then
-    warn("RedeemCode: we cant find RemoteFunction")
-end
-PacksTab:CreateButton({
-    Name = "Redeem All",
-    Callback = function()
-        if not RedeemRF then
-            StarterGui:SetCore("SendNotification", {
-                Title = "Error",
-                Text = "Redeem RemoteFunction bulunamadı!",
-                Duration = 5
-            })
-            return
-        end
+		for _, code in ipairs(Coupons) do
+			local ok, result = pcall(function()
+				return RedeemRF:InvokeServer(code)
+			end)
 
-        for _, code in ipairs(Coupons) do
-            local ok, result = pcall(function()
-                return RedeemRF:InvokeServer(code)
-            end)
+			if ok and result == true then
+				print("redeem successful worked code is:", code)
+			end
 
-            if ok and result == true then
-                StarterGui:SetCore("SendNotification", {
-                    Title = "Redeem",
-                    Text = code .. " başarılı!",
-                    Duration = 3
-                })
-            elseif ok and result ~= true then
-                print("Kupon geçersiz veya süresi dolmuş:", code)
-            else
-                warn("Redeem Hata: "..code.." - "..tostring(result))
-            end
+			task.wait(0.25)
+		end
 
-            task.wait(0.2)
-        end
-    end
+		Rayfield:Notify({
+			Title = "Redeem",
+			Content = "redeem code is tryed times up or deleted.",
+			Duration = 4
+		})
+	end
 })
 
 local tAnim = Window:CreateTab("Animations / Dances","star")
@@ -1693,7 +1761,7 @@ local function ToggleBass(on)
 end
 
 local gui = Instance.new("ScreenGui",PlayerGui)
-gui.Name = "MusicAdmin"
+gui.Name = "TsurenStudios"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame",gui)
