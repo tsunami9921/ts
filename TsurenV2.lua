@@ -189,6 +189,47 @@ local Window = Rayfield:CreateWindow({
 })
 
 
+local Stats = game:GetService("Stats")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local PLACE_ID = game.PlaceId
+
+local HIGH_PING = 500
+local MAX_HITS = 12
+
+local hit = 0
+
+local function GetPing()
+	local ping = 0
+	pcall(function()
+		ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+	end)
+	return ping
+end
+
+task.spawn(function()
+	while task.wait(2) do
+		local ms = GetPing()
+
+		if ms >= HIGH_PING then
+			hit += 1
+			warn("⚠ High Ping:", math.floor(ms),"ms")
+		else
+			hit = math.max(hit - 1, 0)
+		end
+
+		if hit >= MAX_HITS then
+			warn("🚨 Server unstable! Rejoining new server...")
+			pcall(function()
+				TeleportService:Teleport(PLACE_ID, player)
+			end)
+			break
+		end
+	end
+end)
+
 local function GetBall()
     local misc = Workspace:FindFirstChild("Misc")
     return misc and misc:FindFirstChild("Football")
@@ -1869,59 +1910,29 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
-vis:ClearAllChildren()
-bars = {}
+local vis = Instance.new("Frame",main)
+vis.Size = UDim2.new(0.9,0,0,6)
+vis.Position = UDim2.fromScale(0.05,0.92)
+vis.BackgroundTransparency = 1
 
-local BAR_COUNT = 32
-local RADIUS = 70
-local CENTER = Vector2.new(0.5, 0.5)
-
-for i = 1, BAR_COUNT do
-	local bar = Instance.new("Frame", vis)
-	bar.AnchorPoint = Vector2.new(0.5, 1)
-	bar.Size = UDim2.new(0, 6, 0, 10)
-	bar.BackgroundColor3 = Color3.fromHSV(i / BAR_COUNT, 1, 1)
-	bar.BorderSizePixel = 0
-
-	local angle = math.rad((i / BAR_COUNT) * 360)
-	bar.Position = UDim2.fromScale(
-		CENTER.X + math.cos(angle) * 0.35,
-		CENTER.Y + math.sin(angle) * 0.35
-	)
-	bar.Rotation = math.deg(angle)
-
-	Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+local bars = {}
+for i=1,20 do
+	local bar = Instance.new("Frame",vis)
+	bar.Size = UDim2.new(0.04,0,0.2,0)
+	bar.Position = UDim2.fromScale((i-1)*0.05,0.5)
+	bar.AnchorPoint = Vector2.new(0,0.5)
+	bar.BackgroundColor3 = Color3.fromHSV(i/20,1,1)
 	bars[i] = bar
 end
 
 RunService.RenderStepped:Connect(function()
-	if not MusicSound.IsPlaying then return end
-
-	local loud = math.clamp(MusicSound.PlaybackLoudness / 600, 0.1, 2)
-
-	for i, bar in ipairs(bars) do
-		local height = loud * (i / BAR_COUNT) * 60
-		bar.Size = UDim2.new(0, 6, 0, height)
-
-		bar.BackgroundColor3 = Color3.fromHSV(
-			(tick() * 0.3 + i / BAR_COUNT) % 1,
-			1,
-			1
-		)
+	if MusicSound.IsPlaying then
+		local l = MusicSound.PlaybackLoudness / 500
+		for i,b in ipairs(bars) do
+			b.Size = UDim2.new(0.04,0,math.clamp(l*(i/20),0.1,1),0)
+		end
 	end
-
-	main.Position = main.Position:Lerp(
-		UDim2.new(
-			main.Position.X.Scale,
-			main.Position.X.Offset + math.random(-loud*2, loud*2),
-			main.Position.Y.Scale,
-			main.Position.Y.Offset + math.random(-loud*2, loud*2)
-		),
-		0.15
-	)
 end)
-
-
 
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
