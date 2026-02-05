@@ -1862,41 +1862,61 @@ RunService.RenderStepped:Connect(function()
 end)
 
 
+-- =====================================
+-- TSUREN STUDIOS | LOCAL VERIFY COMMAND (FIXED)
+-- =====================================
+
 local TextChatService = game:GetService("TextChatService")
 local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 
+-- Verify durumu
 local VerifyEnabled = false
 
+-- Private-use icon (Roblox uyumlu)
 local VERIFY_ICON = utf8.char(0xE000)
 
 TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
 	local props = Instance.new("TextChatMessageProperties")
 
-	if not chatMessage.TextSource then
+	-- Güvenlik kontrolleri
+	if not chatMessage or not chatMessage.TextSource then
 		return props
 	end
 
+	-- Sadece LocalPlayer
 	if chatMessage.TextSource.UserId ~= LocalPlayer.UserId then
 		return props
 	end
 
-	local msg = chatMessage.Text
-	if not msg then
+	local text = chatMessage.Text
+	if not text then
 		return props
 	end
 
-	if msg:lower() == ";t verify" then
+	local lower = text:lower()
+
+	-- ================= COMMANDS =================
+	if lower == ";t verify" then
 		VerifyEnabled = true
-		return nil
+
+		-- Komutu gizle (ERRORSIZ YÖNTEM)
+		props.Text = ""
+		props.PrefixText = ""
+		return props
 	end
 
-	if msg:lower() == ";t unverify" then
+	if lower == ";t unverify" then
 		VerifyEnabled = false
-		return nil
+
+		-- Komutu gizle
+		props.Text = ""
+		props.PrefixText = ""
+		return props
 	end
 
+	-- ================= VERIFY PREFIX =================
 	if VerifyEnabled then
 		props.PrefixText = string.gsub(
 			chatMessage.PrefixText,
