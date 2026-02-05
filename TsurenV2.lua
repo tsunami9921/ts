@@ -188,48 +188,6 @@ local Window = Rayfield:CreateWindow({
     Theme = "Bloom"
 })
 
-
-local Stats = game:GetService("Stats")
-local TeleportService = game:GetService("TeleportService")
-local Players = game:GetService("Players")
-
-local player = Players.LocalPlayer
-local PLACE_ID = game.PlaceId
-
-local HIGH_PING = 500
-local MAX_HITS = 12
-
-local hit = 0
-
-local function GetPing()
-	local ping = 0
-	pcall(function()
-		ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
-	end)
-	return ping
-end
-
-task.spawn(function()
-	while task.wait(2) do
-		local ms = GetPing()
-
-		if ms >= HIGH_PING then
-			hit += 1
-			warn("⚠ High Ping:", math.floor(ms),"ms")
-		else
-			hit = math.max(hit - 1, 0)
-		end
-
-		if hit >= MAX_HITS then
-			warn("🚨 Server unstable! Rejoining new server...")
-			pcall(function()
-				TeleportService:Teleport(PLACE_ID, player)
-			end)
-			break
-		end
-	end
-end)
-
 local function GetBall()
     local misc = Workspace:FindFirstChild("Misc")
     return misc and misc:FindFirstChild("Football")
