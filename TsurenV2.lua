@@ -13,27 +13,25 @@ local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local LogService = game:GetService("LogService")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local LoadingActive = false
 
-local function StartLoadScreen()
+local function StartLoadingScreen()
 	if LoadingActive then return end
 	LoadingActive = true
 
-	-- 📦 ScreenGui
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "TsurenLoadScreen"
-	gui.ResetOnSpawn = false
+	gui.Name = "LoadingScreen"
 	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
 	gui.Parent = PlayerGui
 
-	-- 🖤 Background
 	local bg = Instance.new("Frame")
 	bg.Size = UDim2.fromScale(1,1)
 	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
 	bg.Parent = gui
 
-	-- 🟦 Title
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1,0,0,80)
 	title.Position = UDim2.new(0,0,0.05,0)
@@ -44,7 +42,6 @@ local function StartLoadScreen()
 	title.Font = Enum.Font.GothamBold
 	title.Parent = bg
 
-	-- Blinking animation
 	task.spawn(function()
 		while gui.Parent do
 			title.TextTransparency = 0
@@ -54,17 +51,18 @@ local function StartLoadScreen()
 		end
 	end)
 
-	-- 🟩 Console Frame
 	local consoleFrame = Instance.new("Frame")
-	consoleFrame.Size = UDim2.fromScale(0.6,0.4)
+	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
 	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
 	consoleFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
 	consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
 	consoleFrame.BorderSizePixel = 2
 	consoleFrame.Parent = bg
-	Instance.new("UICorner", consoleFrame).CornerRadius = UDim.new(0,8)
 
-	-- 📝 Console Text
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = consoleFrame
+
 	local consoleText = Instance.new("TextLabel")
 	consoleText.Size = UDim2.new(1,-10,1,-10)
 	consoleText.Position = UDim2.new(0,5,0,5)
@@ -80,95 +78,108 @@ local function StartLoadScreen()
 	consoleText.Parent = consoleFrame
 
 	local logs = {}
-	local function AddLog(msg)
+	local function addLog(msg)
 		table.insert(logs, msg)
-		if #logs > 18 then table.remove(logs,1) end
-		consoleText.Text = table.concat(logs,"\n")
+		if #logs > 18 then
+			table.remove(logs,1)
+		end
+		consoleText.Text = table.concat(logs, "\n")
 	end
 
-	AddLog("Initializing TsurenStudios Client...")
-	AddLog("Loading services...")
-	AddLog("Preparing UI...")
+	LogService.MessageOut:Connect(function(message, messageType)
+		addLog("> "..message)
+	end)
 
-	-- 🔗 Wait for SharedInterfaceStates safely
-	local SharedFolder = ReplicatedStorage:FindFirstChild("Shared")
-	local SharedStates = SharedFolder and SharedFolder:FindFirstChild("SharedInterfaceStates")
-
-	if SharedStates then
-		AddLog("SharedInterfaceStates loaded ✅")
-	else
-		AddLog("SharedInterfaceStates not found, skipping ⚠")
-	end
-
-	-- 🎵 Background Music
 	local music = Instance.new("Sound")
 	music.SoundId = "rbxassetid://9045130736"
-	music.Volume = 0.5
+	music.Volume = 1
 	music.Looped = false
 	music.Parent = SoundService
-	pcall(function() music:Play() end)
+	music:Play()
 
-	-- ❤️ Heart Animation
-	local heart = Instance.new("TextLabel")
-	heart.Size = UDim2.fromScale(1,1)
-	heart.Position = UDim2.new(0,0,0,0)
-	heart.BackgroundTransparency = 1
-	heart.TextColor3 = Color3.fromRGB(255,0,0)
-	heart.TextScaled = true
-	heart.Font = Enum.Font.Code
-	heart.RichText = true
-	heart.TextXAlignment = Enum.TextXAlignment.Center
-	heart.TextYAlignment = Enum.TextYAlignment.Center
-	heart.Parent = consoleFrame
-
-	local heartPattern = {
-		"0000110000110000",
-		"0011111001111100",
-		"0111111111111110",
-		"1111111111111111",
-		"1111111111111111",
-		"0111111111111110",
-		"0011111111111100",
-		"0001111111111000",
-		"0000111111110000",
-		"0000011111100000",
-		"0000001111000000",
-		"0000000110000000",
-	}
-
-	local heartText = ""
-	for _,line in ipairs(heartPattern) do
-		local row = ""
-		for c in line:gmatch(".") do
-			if c == "1" then
-				row = row.."❤"
-			else
-				row = row.." "
-			end
+	task.spawn(function()
+		local fakeLogs = {
+			"Initializing Tsuren Engine...",
+			"Loading assets...",
+			"Checking environment...",
+			"Mounting services...",
+			"Preparing client...",
+			"Finalizing..."
+		}
+		for _,v in ipairs(fakeLogs) do
+			print(v)
+			task.wait(1.2)
 		end
-		heartText = heartText..row.."\n"
-	end
-
-	heart.Text = heartText
-
-	-- ⏳ Simulate loading
-	task.wait(3)
-
-	-- ✅ Tween Out
-	local tween = TweenService:Create(bg, TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Position = UDim2.new(0,0,2,0)})
-	tween:Play()
-	tween.Completed:Connect(function()
-		gui:Destroy()
-		LoadingActive = false
 	end)
+
+	task.delay(16, function()
+		music:Stop()
+		consoleText.Text = ""
+		consoleFrame.BorderSizePixel = 0
+		consoleFrame.BackgroundTransparency = 1
+
+		local heart = Instance.new("TextLabel")
+		heart.Size = UDim2.fromScale(1,1)
+		heart.Position = UDim2.new(0,0,0,0)
+		heart.BackgroundTransparency = 1
+		heart.TextColor3 = Color3.fromRGB(255,0,0)
+		heart.TextScaled = true
+		heart.Font = Enum.Font.Code
+		heart.RichText = true
+		heart.TextXAlignment = Enum.TextXAlignment.Center
+		heart.TextYAlignment = Enum.TextYAlignment.Center
+
+		local heartPattern = {
+			"0000110000110000",
+			"0011111001111100",
+			"0111111111111110",
+			"1111111111111111",
+			"1111111111111111",
+			"0111111111111110",
+			"0011111111111100",
+			"0001111111111000",
+			"0000111111110000",
+			"0000011111100000",
+			"0000001111000000",
+			"0000000110000000",
+		}
+
+		local heartText = ""
+		for _,line in ipairs(heartPattern) do
+			local row = ""
+			for c in line:gmatch(".") do
+				if c == "1" then
+					row = row.."1"
+				else
+					row = row.." "
+				end
+			end
+			heartText = heartText..row.."\n"
+		end
+
+		heart.Text = heartText
+		heart.Parent = consoleFrame
+
+		task.delay(2.5, function()
+			local goal = {Position = UDim2.new(0,0,2,0)}
+			local tween = TweenService:Create(bg, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), goal)
+			tween:Play()
+			tween.Completed:Connect(function()
+				gui:Destroy()
+				LoadingActive = false
+			end)
+		end)
+	end)
+
+	while LoadingActive do
+		task.wait()
+	end
 end
 
--- Start LoadScreen
-StartLoadScreen()
+StartLoadingScreen()
 
--- Wait until finished
 repeat task.wait() until not LoadingActive
-
+	
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS 🌸",
@@ -938,7 +949,7 @@ tPlayers:CreateToggle({Name="Through Barriers", CurrentValue=false, Callback=fun
 
 local StaminaController
 pcall(function() StaminaController=Knit.GetController("StaminaController") end)
-local SharedInterfaceStates=require(ReplicatedStorage.Shared.SharedInterfaceStates)
+local SharedInterfaceStates=require(ReplicatedStorage.Shared.States)
 local Movement=require(ReplicatedStorage.Shared.Defaults.Movement)
 local staminaOn=false
 local staminaConn
@@ -962,6 +973,152 @@ UIS.InputBegan:Connect(function(i,gp)
         StaminaController.HasInfiniteStamina:set(staminaOn)
     end
 end)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Knit = require(ReplicatedStorage.Packages.Knit)
+local PacksService = Knit.GetService("PacksService")
+
+local PacksData = require(ReplicatedStorage.Shared.Defaults.Packs)
+
+
+local PackTypes = {}
+for name,_ in pairs(PacksData.ItemData) do
+    table.insert(PackTypes, name)
+end
+table.sort(PackTypes)
+
+
+local SelectedPack = PackTypes[1]
+local AutoBuy = false
+local Buying = false
+
+
+local function BuyPack()
+    if Buying then return end
+    Buying = true
+
+    pcall(function()
+        PacksService:ProcessPurchase(SelectedPack, "Coins")
+    end)
+
+    task.wait(1.2)
+    Buying = false
+end
+
+
+task.spawn(function()
+    while task.wait(2) do
+        if AutoBuy and not Buying then
+            BuyPack()
+        end
+    end
+end)
+
+
+local PacksTab = Window:CreateTab("Packs", "shopping-cart")
+
+PacksTab:CreateDropdown({
+    Name = "Pack",
+    Options = PackTypes,
+    CurrentOption = SelectedPack,
+    Callback = function(v)
+        if type(v) == "table" then
+            SelectedPack = v[1]
+        else
+            SelectedPack = v
+        end
+    end
+})
+
+PacksTab:CreateButton({
+    Name = "Buy Pack",
+    Callback = function()
+        BuyPack()
+    end
+})
+
+PacksTab:CreateToggle({
+    Name = "Auto Buy",
+    CurrentValue = false,
+    Callback = function(v)
+        AutoBuy = v
+    end
+})
+
+local StarterGui = game:GetService("StarterGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Coupons = {"PACKS",
+    "SLS25",
+    "100kLikes",
+    "battlepass",
+    "xmas",
+    "90kLikes",
+    "80kLikes",
+    "console!",
+    "70kLikes",
+    "Part1",
+    "60kLikes",
+    "50kLikes",
+    "GKFix!",
+    "40kLikes",
+    "30KLIKES",
+    "slscomp",
+    "25klikes",
+    "49kmembers",
+    "goalsaver",
+    "goalscorer",
+    "number1soccergame",
+    "islandmapforever",
+    "Darkvaderbovin",
+    "SeniorYeet",
+    "newyears2026",
+    "veterantalking",
+    "johnsnewyear",
+    "MrCooperth",
+    "Robloxpls"
+}
+
+local success, RedeemRF = pcall(function()
+    return ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"].knit.Services.RewardsService.RF.RedeemCode
+end)
+if not success or not RedeemRF then
+    warn("RedeemCode: we cant find RemoteFunction")
+end
+PacksTab:CreateButton({
+    Name = "Redeem All",
+    Callback = function()
+        if not RedeemRF then
+            StarterGui:SetCore("SendNotification", {
+                Title = "Error",
+                Text = "Redeem RemoteFunction bulunamadı!",
+                Duration = 5
+            })
+            return
+        end
+
+        for _, code in ipairs(Coupons) do
+            local ok, result = pcall(function()
+                return RedeemRF:InvokeServer(code)
+            end)
+
+            if ok and result == true then
+                StarterGui:SetCore("SendNotification", {
+                    Title = "Redeem",
+                    Text = code .. " başarılı!",
+                    Duration = 3
+                })
+            elseif ok and result ~= true then
+                print("Kupon geçersiz veya süresi dolmuş:", code)
+            else
+                warn("Redeem Hata: "..code.." - "..tostring(result))
+            end
+
+            task.wait(0.2)
+        end
+    end
+})
 
 local tAnim = Window:CreateTab("Animations / Dances","star")
 
