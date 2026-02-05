@@ -87,10 +87,6 @@ local function StartLoadingScreen()
 		consoleText.Text = table.concat(logs, "\n")
 	end
 
-	LogService.MessageOut:Connect(function(message, messageType)
-		addLog("> "..message)
-	end)
-
 	local music = Instance.new("Sound")
 	music.SoundId = "rbxassetid://9045130736"
 	music.Volume = 1
