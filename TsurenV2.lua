@@ -14,6 +14,8 @@ local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local LogService = game:GetService("LogService")
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Stats = LocalPlayer:WaitForChild("Stats")
+local CoreGui = game:GetService("CoreGui")
 
 local player = Players.LocalPlayer
 
@@ -82,15 +84,6 @@ local function GetStats()
 end
 
 -- =========================
--- GET THUMBNAIL (Avatar & Game)
--- =========================
-local function GetThumbnails()
-    local playerHeadshot = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
-    local gameThumbnail = "https://assetgame.roblox.com/Game/Tools/ThumbnailAsset.ashx?id=" .. game.PlaceId .. "&fmt=png&wd=420&ht=420"
-    return playerHeadshot, gameThumbnail
-end
-
--- =========================
 -- SEND WEBHOOK
 -- =========================
 local function SendWebhook()
@@ -111,16 +104,12 @@ local function SendWebhook()
     local device = GetDevice()
     local ping = GetPing()
 
-    local avatar, gameThumb = GetThumbnails()
-
     local payload = {
         username = "TsurenStudios Logger",
         content = "✅ Rayfield Loaded",
         embeds = {{
             title = "🎮 Player Logged",
             color = 5793266,
-            thumbnail = { url = avatar },
-            image = { url = gameThumb },
             fields = {
                 { name = "👤 Username", value = username, inline = true },
                 { name = "✨ Display Name", value = displayName, inline = true },
@@ -134,10 +123,12 @@ local function SendWebhook()
                 { name = "⚡ XP", value = xp, inline = true },
                 { name = "🎯 SkillPoints", value = points, inline = true },
                 { name = "🎮 Game", value = gameName, inline = false },
-                { name = "🧩 JobId", value = "```"..jobId.."```", inline = false },
+                { name = "🧩 JobId", value = "```" .. jobId .. "```", inline = false },
                 { name = "🔗 Join Server", value = joinLink, inline = false }
             },
-            footer = { text = "TsurenStudios | FINAL FIX" },
+            footer = {
+                text = "TsurenStudios | FINAL FIX"
+            },
             timestamp = DateTime.now():ToIsoDate()
         }}
     }
@@ -151,7 +142,6 @@ local function SendWebhook()
         })
     end)
 end
-
 -- =========================
 -- LOAD SCREEN SCRIPT
 -- =========================
