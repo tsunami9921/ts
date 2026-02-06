@@ -16,166 +16,163 @@ local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 local LoadingActive = false
 
 local function StartLoadingScreen()
-    if LoadingActive then return end
-    LoadingActive = true
+	if LoadingActive then return end
+	LoadingActive = true
 
-    -- ScreenGui
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "LoadingScreen"
-    gui.IgnoreGuiInset = true
-    gui.ResetOnSpawn = false
-    gui.Parent = PlayerGui
+	-- ScreenGui
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LoadingScreen"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.Parent = PlayerGui
 
-    -- Background
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.fromScale(1,1)
-    bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    bg.Parent = gui
+	-- Background
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.fromScale(1,1)
+	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	bg.Parent = gui
 
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,0,0,80)
-    title.Position = UDim2.new(0,0,0.05,0)
-    title.BackgroundTransparency = 1
-    title.Text = "TsurenStudios"
-    title.TextColor3 = Color3.fromRGB(0,170,255)
-    title.TextScaled = true
-    title.Font = Enum.Font.GothamBold
-    title.Parent = bg
+	-- Title
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1,0,0,80)
+	title.Position = UDim2.new(0,0,0.05,0)
+	title.BackgroundTransparency = 1
+	title.Text = "TsurenStudios"
+	title.TextColor3 = Color3.fromRGB(0,170,255)
+	title.TextScaled = true
+	title.Font = Enum.Font.GothamBold
+	title.Parent = bg
 
-    task.spawn(function()
-        while gui.Parent do
-            title.TextTransparency = 0
-            task.wait(0.6)
-            title.TextTransparency = 0.5
-            task.wait(0.6)
-        end
-    end)
+	-- Title blink
+	task.spawn(function()
+		while gui.Parent do
+			title.TextTransparency = 0
+			task.wait(0.6)
+			title.TextTransparency = 0.5
+			task.wait(0.6)
+		end
+	end)
 
-    -- Console frame
-    local consoleFrame = Instance.new("Frame")
-    consoleFrame.Size = UDim2.fromScale(0.6,0.45)
-    consoleFrame.Position = UDim2.fromScale(0.2,0.3)
-    consoleFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
-    consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
-    consoleFrame.BorderSizePixel = 2
-    consoleFrame.Parent = bg
+	-- Console frame (scrollable)
+	local consoleFrame = Instance.new("Frame")
+	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
+	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
+	consoleFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
+	consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
+	consoleFrame.BorderSizePixel = 2
+	consoleFrame.Parent = bg
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,8)
-    corner.Parent = consoleFrame
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = consoleFrame
 
-    local consoleText = Instance.new("TextLabel")
-    consoleText.Size = UDim2.new(1,-10,1,-10)
-    consoleText.Position = UDim2.new(0,5,0,5)
-    consoleText.BackgroundTransparency = 1
-    consoleText.TextXAlignment = Enum.TextXAlignment.Left
-    consoleText.TextYAlignment = Enum.TextYAlignment.Top
-    consoleText.TextWrapped = true
-    consoleText.RichText = true
-    consoleText.Text = ""
-    consoleText.Font = Enum.Font.Code
-    consoleText.TextSize = 18
-    consoleText.TextColor3 = Color3.fromRGB(0,255,0)
-    consoleText.Parent = consoleFrame
+	local consoleScroll = Instance.new("ScrollingFrame")
+	consoleScroll.Size = UDim2.fromScale(1,1)
+	consoleScroll.BackgroundTransparency = 1
+	consoleScroll.CanvasSize = UDim2.new(0,0,0,0)
+	consoleScroll.ScrollBarThickness = 6
+	consoleScroll.Parent = consoleFrame
 
-    -- Console logging function
-    local logs = {}
-    local function addLog(msg)
-        table.insert(logs, msg)
-        if #logs > 18 then
-            table.remove(logs,1)
-        end
-        consoleText.Text = table.concat(logs,"\n")
-    end
+	local consoleText = Instance.new("UIListLayout")
+	consoleText.Parent = consoleScroll
+	consoleText.SortOrder = Enum.SortOrder.LayoutOrder
+	consoleText.Padding = UDim.new(0,2)
 
-    -- Music
-    local music = Instance.new("Sound")
-    music.SoundId = "rbxassetid://9045130736"
-    music.Volume = 1
-    music.Looped = false
-    music.Parent = gui
-    music:Play()
+	-- Logging function
+	local function addLog(msg)
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1,0,0,20)
+		label.BackgroundTransparency = 1
+		label.Text = msg
+		label.TextColor3 = Color3.fromRGB(0,255,0)
+		label.TextScaled = false
+		label.Font = Enum.Font.Code
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = consoleScroll
+		consoleScroll.CanvasSize = UDim2.new(0,0,0,#consoleScroll:GetChildren()*0.025)
+		consoleScroll.CanvasPosition = Vector2.new(0,math.huge)
+	end
 
-    -- Load Animations
-    task.spawn(function()
-        local Animations = {}
-        for _, obj in ipairs(game:GetDescendants()) do
-            if obj:IsA("Animation") then
-                table.insert(Animations, obj)
-            end
-        end
+	-- Music (16 seconds)
+	local music = Instance.new("Sound")
+	music.SoundId = "rbxassetid://9045130736"
+	music.Volume = 1
+	music.Looped = false
+	music.TimePosition = 0
+	music.Parent = gui
+	music:Play()
+	task.spawn(function()
+		task.wait(16)
+		music:Stop()
+	end)
 
-        local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+	-- Load all Animations
+	task.spawn(function()
+		local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+		for _, obj in ipairs(game:GetDescendants()) do
+			if obj:IsA("Animation") then
+				addLog("> Loading animation: "..obj.Name)
+				if humanoid then
+					local track = humanoid:LoadAnimation(obj)
+					track:Stop()
+				end
+				task.wait(0.3)
+			end
+		end
+	end)
 
-        for i, anim in ipairs(Animations) do
-            addLog("> Loading animation: "..anim.Name)
-            if humanoid then
-                local track = humanoid:LoadAnimation(anim)
-                track:Stop() -- sadece load etmek için
-            end
-            task.wait(0.5)
-        end
-    end)
+	-- Finish loading (heart)
+	task.delay(16, function()
+		consoleScroll.CanvasSize = UDim2.new(0,0,0,consoleScroll.AbsoluteContentSize.Y)
+		local heart = Instance.new("TextLabel")
+		heart.Size = UDim2.fromScale(1,1)
+		heart.Position = UDim2.new(0,0,0,0)
+		heart.BackgroundTransparency = 1
+		heart.TextColor3 = Color3.fromRGB(255,0,0)
+		heart.TextScaled = true
+		heart.Font = Enum.Font.Code
+		heart.RichText = true
+		heart.TextXAlignment = Enum.TextXAlignment.Center
+		heart.TextYAlignment = Enum.TextYAlignment.Center
 
-    -- Finish loading
-    task.delay(10, function()
-        music:Stop()
-        consoleText.Text = ""
-        consoleFrame.BorderSizePixel = 0
-        consoleFrame.BackgroundTransparency = 1
+		local heartPattern = {
+			"0000110000110000",
+			"0011111001111100",
+			"0111111111111110",
+			"1111111111111111",
+			"1111111111111111",
+			"0111111111111110",
+			"0011111111111100",
+			"0001111111111000",
+			"0000111111110000",
+			"0000011111100000",
+			"0000001111000000",
+			"0000000110000000",
+		}
 
-        -- Heart animation
-        local heart = Instance.new("TextLabel")
-        heart.Size = UDim2.fromScale(1,1)
-        heart.Position = UDim2.new(0,0,0,0)
-        heart.BackgroundTransparency = 1
-        heart.TextColor3 = Color3.fromRGB(255,0,0)
-        heart.TextScaled = true
-        heart.Font = Enum.Font.Code
-        heart.RichText = true
-        heart.TextXAlignment = Enum.TextXAlignment.Center
-        heart.TextYAlignment = Enum.TextYAlignment.Center
+		local heartText = ""
+		for _,line in ipairs(heartPattern) do
+			for c in line:gmatch(".") do
+				heartText = heartText..(c=="1" and "1" or " ")
+			end
+			heartText = heartText.."\n"
+		end
+		heart.Text = heartText
+		heart.Parent = consoleFrame
 
-        local heartPattern = {
-            "0000110000110000",
-            "0011111001111100",
-            "0111111111111110",
-            "1111111111111111",
-            "1111111111111111",
-            "0111111111111110",
-            "0011111111111100",
-            "0001111111111000",
-            "0000111111110000",
-            "0000011111100000",
-            "0000001111000000",
-            "0000000110000000",
-        }
+		task.delay(2.5, function()
+			local tween = TweenService:Create(bg, TweenInfo.new(1,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut), {Position = UDim2.new(0,0,2,0)})
+			tween:Play()
+			tween.Completed:Connect(function()
+				gui:Destroy()
+				LoadingActive = false
+			end)
+		end)
+	end)
 
-        local heartText = ""
-        for _,line in ipairs(heartPattern) do
-            for c in line:gmatch(".") do
-                heartText = heartText..(c=="1" and "1" or " ")
-            end
-            heartText = heartText.."\n"
-        end
-        heart.Text = heartText
-        heart.Parent = consoleFrame
-
-        task.delay(2.5, function()
-            local goal = {Position = UDim2.new(0,0,2,0)}
-            local tween = TweenService:Create(bg, TweenInfo.new(1,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut),goal)
-            tween:Play()
-            tween.Completed:Connect(function()
-                gui:Destroy()
-                LoadingActive = false
-            end)
-        end)
-    end)
-
-    while LoadingActive do
-        task.wait()
-    end
+	while LoadingActive do
+		task.wait()
+	end
 end
 
 -- Start Loadscreen
