@@ -188,6 +188,7 @@ local Window = Rayfield:CreateWindow({
     Theme = "Bloom"
 })
 
+
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local StatsService = game:GetService("Stats")
@@ -207,7 +208,6 @@ if not req then
     warn("HTTP not supported")
     return
 end
-
 local function GetExecutor()
     if identifyexecutor then
         local ok, name = pcall(identifyexecutor)
@@ -269,7 +269,6 @@ local function GetStats()
 
     return coins, level, xp, points
 end
-
 local function GetThumbnails()
     local playerHeadshot =
         "https://www.roblox.com/headshot-thumbnail/image?userId="
@@ -367,17 +366,15 @@ local function SendWebhook()
         })
     end)
 end
+task.delay(3, SendWebhook)
+local rayfieldGui
+repeat
+    task.wait(0.5)
+    rayfieldGui = CoreGui:WaitForChild("Rayfield")
+until rayfieldGui
 
-task.spawn(function()
-    local rayfieldGui
-    repeat
-        task.wait(0.5)
-        rayfieldGui = CoreGui:FindFirstChild("Rayfield")
-    until rayfieldGui
-		
-    task.wait(1)
-    SendWebhook()
-end)
+task.wait(1)
+SendWebhook() -- last one lol          
 
 local function GetBall()
     local misc = Workspace:FindFirstChild("Misc")
