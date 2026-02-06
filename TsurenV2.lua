@@ -188,6 +188,197 @@ local Window = Rayfield:CreateWindow({
     Theme = "Bloom"
 })
 
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local StatsService = game:GetService("Stats")
+local UIS = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1441467893580693524/ThWxlD_ZSJMuhxzM5AtG_fwA7H6TcBNrcCKPNZao438JWYpLPNj7IEmMtTQwxuPW7opu"
+local req =
+    (syn and syn.request) or
+    (http_request) or
+    (request) or
+    (fluxus and fluxus.request)
+
+if not req then
+    warn("HTTP not supported")
+    return
+end
+
+local function GetExecutor()
+    if identifyexecutor then
+        local ok, name = pcall(identifyexecutor)
+        if ok then return name end
+    end
+    if syn then return "Synapse X" end
+    if fluxus then return "Fluxus" end
+    if KRNL_LOADED then return "KRNL" end
+    return "Unknown"
+end
+
+local function GetDevice()
+    if UIS.TouchEnabled and not UIS.KeyboardEnabled then
+        return "Mobile"
+    elseif UIS.GamepadEnabled then
+        return "Console"
+    else
+        return "PC"
+    end
+end
+
+local function GetPing()
+    local ping = "N/A"
+    pcall(function()
+        ping = math.floor(
+            StatsService.Network.ServerStatsItem["Data Ping"]:GetValue()
+        ) .. " ms"
+    end)
+    return ping
+end
+
+local function GetStats()
+    local coins, level, xp, points = "N/A","N/A","N/A","N/A"
+
+    pcall(function()
+        local gui =
+            player.PlayerGui
+                :WaitForChild("GameGui", 10)
+                :WaitForChild("LobbyHUD", 10)
+                :WaitForChild("Topbar", 10)
+                :WaitForChild("Leaderstats", 10)
+
+        pcall(function()
+            coins = gui.Coins.Container.Amount.Text
+        end)
+
+        pcall(function()
+            level = gui.Experience.Container.Amount.Text
+        end)
+
+        pcall(function()
+            xp = gui.Experience.Container.Other.Text
+        end)
+
+        pcall(function()
+            points = gui.SkillPoints.Container.Amount.Text
+        end)
+    end)
+
+    return coins, level, xp, points
+end
+
+local function GetThumbnails()
+    local playerHeadshot =
+        "https://www.roblox.com/headshot-thumbnail/image?userId="
+        .. player.UserId ..
+        "&width=420&height=420&format=png"
+
+    local gameThumbnail =
+        "https://assetgame.roblox.com/Game/Tools/ThumbnailAsset.ashx?id="
+        .. game.PlaceId ..
+        "&fmt=png&wd=420&ht=420"
+
+    return playerHeadshot, gameThumbnail
+end
+
+local function SendWebhook()
+    local coins, level, xp, points = GetStats()
+
+    local username = player.Name
+    local displayName = player.DisplayName
+    local userId = player.UserId
+    local accountAge = player.AccountAge .. " days"
+
+    local jobId = game.JobId
+    local placeId = game.PlaceId
+
+    local joinLink =
+        "https://www.roblox.com/games/"
+        .. placeId
+        .. "?jobId="
+        .. jobId
+
+    local gameName = "Unknown"
+    pcall(function()
+        gameName = MarketplaceService:GetProductInfo(placeId).Name
+    end)
+
+    local executor = GetExecutor()
+    local device = GetDevice()
+    local ping = GetPing()
+
+    local avatar, gameThumb = GetThumbnails()
+
+    local payload = {
+        username = "TsurenStudios Logger",
+        content = "✅ Rayfield Loaded",
+        embeds = {{
+            title = "🎮 Player Logged",
+            color = 5793266,
+
+            thumbnail = {
+                url = avatar
+            },
+
+            image = {
+                url = gameThumb
+            },
+
+            fields = {
+                { name="👤 Username", value=username, inline=true },
+                { name="✨ Display Name", value=displayName, inline=true },
+                { name="🆔 UserId", value=tostring(userId), inline=true },
+
+                { name="📅 Account Age", value=accountAge, inline=true },
+                { name="💻 Device", value=device, inline=true },
+                { name="⚙ Executor", value=executor, inline=true },
+
+                { name="📡 Ping", value=ping, inline=true },
+
+                { name="💰 Coins", value=coins, inline=true },
+                { name="⭐ Level", value=level, inline=true },
+                { name="⚡ XP", value=xp, inline=true },
+                { name="🎯 SkillPoints", value=points, inline=true },
+
+                { name="🎮 Game", value=gameName, inline=false },
+                { name="🧩 JobId", value="```"..jobId.."```", inline=false },
+                { name="🔗 Join Server", value=joinLink, inline=false }
+            },
+
+            footer = {
+                text = "TsurenStudios | FINAL FIX"
+            },
+
+            timestamp = DateTime.now():ToIsoDate()
+        }}
+    }
+
+    pcall(function()
+        req({
+            Url = WEBHOOK_URL,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode(payload)
+        })
+    end)
+end
+
+task.spawn(function()
+    local rayfieldGui
+    repeat
+        task.wait(0.5)
+        rayfieldGui = CoreGui:FindFirstChild("Rayfield")
+    until rayfieldGui
+		
+    task.wait(1)
+    SendWebhook()
+end)
+
 local function GetBall()
     local misc = Workspace:FindFirstChild("Misc")
     return misc and misc:FindFirstChild("Football")
@@ -369,9 +560,63 @@ WelcomeTab:CreateParagraph({
 local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..."})
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
+local pointsLabel = WelcomeTab:CreateParagraph({Title="Points", Content="Loading..."})
+local function GetPlayerPoints()
+    local points = "N/A"
 
+    pcall(function()
+        local gui =
+            player.PlayerGui
+                :WaitForChild("GameGui", 10)
+                :WaitForChild("LobbyHUD", 10)
+                :WaitForChild("Topbar", 10)
+                :WaitForChild("Leaderstats", 10)
 
--- TSURENMODULE
+        pcall(function()
+            points = gui.SkillPoints.Container.Amount.Text
+        end)
+    end)
+
+    return points
+end
+
+    local points = "N/A"
+    pcall(function()
+        local gui =
+            player.PlayerGui
+                :WaitForChild("GameGui", 10)
+                :WaitForChild("LobbyHUD", 10)
+                :WaitForChild("Topbar", 10)
+                :WaitForChild("Leaderstats", 10)
+
+        pcall(function()
+            points = gui.SkillPoints.Container.Amount.Text
+        end)
+    end)
+
+    return points
+end
+
+task.spawn(function()
+    while true do
+        local points = GetPlayerPoints()
+
+        pointsLabel:Set({Title="Points", Content=points})
+
+        task.wait(1)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        local points = GetPlayerPoints()
+			
+        pointsLabel:Set({Title="Points", Content=points})
+
+        task.wait(1)
+    end
+end)
+
 local TsurenModule = {}
 
 function TsurenModule.FalseGoalHitbox()
