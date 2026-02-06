@@ -13,7 +13,6 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
 local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-
 local LoadingActive = false
 
 local function StartLoadingScreen()
@@ -32,7 +31,7 @@ local function StartLoadingScreen()
 	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
 	bg.Parent = gui
 
-	-- Title
+	-- TITLE
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1,0,0,80)
 	title.Position = UDim2.new(0,0,0.05,0)
@@ -52,7 +51,7 @@ local function StartLoadingScreen()
 		end
 	end)
 
-	-- Console Frame
+	-- CONSOLE FRAME
 	local consoleFrame = Instance.new("Frame")
 	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
 	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
@@ -60,17 +59,16 @@ local function StartLoadingScreen()
 	consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
 	consoleFrame.BorderSizePixel = 2
 	consoleFrame.Parent = bg
-
 	Instance.new("UICorner", consoleFrame).CornerRadius = UDim.new(0,8)
 
-	-- SCROLLING CONSOLE
+	-- SCROLL
 	local scroll = Instance.new("ScrollingFrame")
 	scroll.Size = UDim2.new(1,-10,1,-10)
 	scroll.Position = UDim2.new(0,5,0,5)
 	scroll.CanvasSize = UDim2.new(0,0,0,0)
 	scroll.ScrollBarThickness = 6
-	scroll.ScrollingEnabled = true
 	scroll.Active = true
+	scroll.ScrollingEnabled = true
 	scroll.BackgroundTransparency = 1
 	scroll.Parent = consoleFrame
 
@@ -78,17 +76,24 @@ local function StartLoadingScreen()
 	layout.Padding = UDim.new(0,4)
 	layout.Parent = scroll
 
-	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
-		scroll.CanvasPosition = Vector2.new(0, math.max(0, scroll.CanvasSize.Y.Offset - scroll.AbsoluteWindowSize.Y))
+	local userScrolling = false
+	scroll:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+		userScrolling = true
 	end)
 
-	-- LOG FUNC
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+		if not userScrolling then
+			scroll.CanvasPosition = Vector2.new(0, math.max(0, scroll.CanvasSize.Y.Offset - scroll.AbsoluteWindowSize.Y))
+		end
+	end)
+
+	-- LOG
 	local function addLog(text)
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1,0,0,20)
 		label.BackgroundTransparency = 1
-		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.TextXAlignment = Left
 		label.TextWrapped = true
 		label.Text = "> "..text
 		label.Font = Enum.Font.Code
@@ -109,33 +114,44 @@ local function StartLoadingScreen()
 	task.spawn(function()
 		for _,obj in ipairs(game:GetDescendants()) do
 			if obj:IsA("Animation") then
-				addLog("Loading Animation: "..obj.AnimationId)
-				task.wait(0.15)
+				addLog("Loading Animation "..obj.AnimationId)
+				task.wait(0.12)
 			end
 		end
 	end)
 
-	-- FINISH
+	-- FINISH SEQUENCE
 	task.delay(16, function()
 		music:Stop()
-		consoleFrame.Visible = false
 
-		local heartFrame = Instance.new("Frame")
-		heartFrame.Size = UDim2.fromScale(1,1)
-		heartFrame.BackgroundTransparency = 1
-		heartFrame.Parent = bg
+		-- Fade console
+		TweenService:Create(consoleFrame, TweenInfo.new(0.6), {
+			BackgroundTransparency = 1
+		}):Play()
 
-		local heart = Instance.new("TextLabel")
-		heart.Size = UDim2.fromScale(1,1)
-		heart.BackgroundTransparency = 1
-		heart.TextColor3 = Color3.fromRGB(255,0,0)
-		heart.TextScaled = true
-		heart.Font = Enum.Font.Code
-		heart.TextXAlignment = Center
-		heart.TextYAlignment = Center
-		heart.Parent = heartFrame
+		for _,v in ipairs(consoleFrame:GetDescendants()) do
+			if v:IsA("TextLabel") then
+				TweenService:Create(v, TweenInfo.new(0.6), {
+					TextTransparency = 1
+				}):Play()
+			end
+		end
 
-		heart.Text = [[
+		-- HEART OVERLAY
+		task.delay(0.7, function()
+			consoleFrame.Visible = false
+
+			local heart = Instance.new("TextLabel")
+			heart.Size = UDim2.fromScale(1,1)
+			heart.BackgroundTransparency = 1
+			heart.TextColor3 = Color3.fromRGB(255,0,0)
+			heart.TextScaled = true
+			heart.Font = Enum.Font.Code
+			heart.TextXAlignment = Center
+			heart.TextYAlignment = Center
+			heart.Parent = bg
+
+			heart.Text = [[
   11   11
  1111 1111
 1111111111
@@ -146,12 +162,15 @@ local function StartLoadingScreen()
     11
 ]]
 
-		task.delay(2.5, function()
-			local tween = TweenService:Create(bg, TweenInfo.new(1), {Position = UDim2.new(0,0,2,0)})
-			tween:Play()
-			tween.Completed:Connect(function()
-				gui:Destroy()
-				LoadingActive = false
+			task.delay(2.5, function()
+				local tween = TweenService:Create(bg, TweenInfo.new(1), {
+					Position = UDim2.new(0,0,2,0)
+				})
+				tween:Play()
+				tween.Completed:Connect(function()
+					gui:Destroy()
+					LoadingActive = false
+				end)
 			end)
 		end)
 	end)
