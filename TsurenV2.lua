@@ -16,6 +16,8 @@ local Stats = LocalPlayer:WaitForChild("Stats")
 local CoreGui = game:GetService("CoreGui")
 local LogService = game:GetService("LogService")
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local LocalPlayer = Players.LocalPlayer
 local LoadingActive = false
 
 local function StartLoadingScreen()
