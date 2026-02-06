@@ -13,20 +13,20 @@ local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local SoundService = game:GetService("SoundService")
 local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
 local LoadingActive = false
 
 local function StartLoadingScreen()
 	if LoadingActive then return end
 	LoadingActive = true
 
-	-- ScreenGui
+	-- GUI
 	local gui = Instance.new("ScreenGui")
-	gui.Name = "LoadingScreen"
 	gui.IgnoreGuiInset = true
 	gui.ResetOnSpawn = false
 	gui.Parent = PlayerGui
 
-	-- Background
+	-- BG
 	local bg = Instance.new("Frame")
 	bg.Size = UDim2.fromScale(1,1)
 	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
@@ -43,7 +43,6 @@ local function StartLoadingScreen()
 	title.Font = Enum.Font.GothamBold
 	title.Parent = bg
 
-	-- Title blink
 	task.spawn(function()
 		while gui.Parent do
 			title.TextTransparency = 0
@@ -53,7 +52,7 @@ local function StartLoadingScreen()
 		end
 	end)
 
-	-- Console frame (scrollable)
+	-- Console Frame
 	local consoleFrame = Instance.new("Frame")
 	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
 	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
@@ -62,106 +61,93 @@ local function StartLoadingScreen()
 	consoleFrame.BorderSizePixel = 2
 	consoleFrame.Parent = bg
 
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0,8)
-	corner.Parent = consoleFrame
+	Instance.new("UICorner", consoleFrame).CornerRadius = UDim.new(0,8)
 
-	local consoleScroll = Instance.new("ScrollingFrame")
-	consoleScroll.Size = UDim2.fromScale(1,1)
-	consoleScroll.BackgroundTransparency = 1
-	consoleScroll.CanvasSize = UDim2.new(0,0,0,0)
-	consoleScroll.ScrollBarThickness = 6
-	consoleScroll.Parent = consoleFrame
+	-- SCROLLING CONSOLE
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Size = UDim2.new(1,-10,1,-10)
+	scroll.Position = UDim2.new(0,5,0,5)
+	scroll.CanvasSize = UDim2.new(0,0,0,0)
+	scroll.ScrollBarThickness = 6
+	scroll.ScrollingEnabled = true
+	scroll.Active = true
+	scroll.BackgroundTransparency = 1
+	scroll.Parent = consoleFrame
 
-	local consoleText = Instance.new("UIListLayout")
-	consoleText.Parent = consoleScroll
-	consoleText.SortOrder = Enum.SortOrder.LayoutOrder
-	consoleText.Padding = UDim.new(0,2)
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0,4)
+	layout.Parent = scroll
 
-	-- Logging function
-	local function addLog(msg)
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
+		scroll.CanvasPosition = Vector2.new(0, math.max(0, scroll.CanvasSize.Y.Offset - scroll.AbsoluteWindowSize.Y))
+	end)
+
+	-- LOG FUNC
+	local function addLog(text)
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1,0,0,20)
 		label.BackgroundTransparency = 1
-		label.Text = msg
-		label.TextColor3 = Color3.fromRGB(0,255,0)
-		label.TextScaled = false
-		label.Font = Enum.Font.Code
 		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Parent = consoleScroll
-		consoleScroll.CanvasSize = UDim2.new(0,0,0,#consoleScroll:GetChildren()*0.025)
-		consoleScroll.CanvasPosition = Vector2.new(0,math.huge)
+		label.TextWrapped = true
+		label.Text = "> "..text
+		label.Font = Enum.Font.Code
+		label.TextSize = 16
+		label.TextColor3 = Color3.fromRGB(0,255,0)
+		label.AutomaticSize = Enum.AutomaticSize.Y
+		label.Parent = scroll
 	end
 
-	-- Music (16 seconds)
+	-- MUSIC (16s)
 	local music = Instance.new("Sound")
 	music.SoundId = "rbxassetid://9045130736"
 	music.Volume = 1
-	music.Looped = false
-	music.TimePosition = 0
 	music.Parent = gui
 	music:Play()
-	task.spawn(function()
-		task.wait(16)
-		music:Stop()
-	end)
 
-	-- Load all Animations
+	-- LOAD ANIMATIONS
 	task.spawn(function()
-		local humanoid = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		for _, obj in ipairs(game:GetDescendants()) do
+		for _,obj in ipairs(game:GetDescendants()) do
 			if obj:IsA("Animation") then
-				addLog("> Loading animation: "..obj.Name)
-				if humanoid then
-					local track = humanoid:LoadAnimation(obj)
-					track:Stop()
-				end
-				task.wait(0.3)
+				addLog("Loading Animation: "..obj.AnimationId)
+				task.wait(0.15)
 			end
 		end
 	end)
 
-	-- Finish loading (heart)
+	-- FINISH
 	task.delay(16, function()
-		consoleScroll.CanvasSize = UDim2.new(0,0,0,consoleScroll.AbsoluteContentSize.Y)
+		music:Stop()
+		consoleFrame.Visible = false
+
+		local heartFrame = Instance.new("Frame")
+		heartFrame.Size = UDim2.fromScale(1,1)
+		heartFrame.BackgroundTransparency = 1
+		heartFrame.Parent = bg
+
 		local heart = Instance.new("TextLabel")
 		heart.Size = UDim2.fromScale(1,1)
-		heart.Position = UDim2.new(0,0,0,0)
 		heart.BackgroundTransparency = 1
 		heart.TextColor3 = Color3.fromRGB(255,0,0)
 		heart.TextScaled = true
 		heart.Font = Enum.Font.Code
-		heart.RichText = true
-		heart.TextXAlignment = Enum.TextXAlignment.Center
-		heart.TextYAlignment = Enum.TextYAlignment.Center
+		heart.TextXAlignment = Center
+		heart.TextYAlignment = Center
+		heart.Parent = heartFrame
 
-		local heartPattern = {
-			"0000110000110000",
-			"0011111001111100",
-			"0111111111111110",
-			"1111111111111111",
-			"1111111111111111",
-			"0111111111111110",
-			"0011111111111100",
-			"0001111111111000",
-			"0000111111110000",
-			"0000011111100000",
-			"0000001111000000",
-			"0000000110000000",
-		}
-
-		local heartText = ""
-		for _,line in ipairs(heartPattern) do
-			for c in line:gmatch(".") do
-				heartText = heartText..(c=="1" and "1" or " ")
-			end
-			heartText = heartText.."\n"
-		end
-		heart.Text = heartText
-		heart.Parent = consoleFrame
+		heart.Text = [[
+  11   11
+ 1111 1111
+1111111111
+1111111111
+ 11111111
+  111111
+   1111
+    11
+]]
 
 		task.delay(2.5, function()
-			local tween = TweenService:Create(bg, TweenInfo.new(1,Enum.EasingStyle.Quad,Enum.EasingDirection.InOut), {Position = UDim2.new(0,0,2,0)})
+			local tween = TweenService:Create(bg, TweenInfo.new(1), {Position = UDim2.new(0,0,2,0)})
 			tween:Play()
 			tween.Completed:Connect(function()
 				gui:Destroy()
@@ -170,12 +156,9 @@ local function StartLoadingScreen()
 		end)
 	end)
 
-	while LoadingActive do
-		task.wait()
-	end
+	while LoadingActive do task.wait() end
 end
 
--- Start Loadscreen
 StartLoadingScreen()
 repeat task.wait() until not LoadingActive
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
