@@ -14,14 +14,6 @@ local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local LogService = game:GetService("LogService")
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
--- SERVICES
-local Players = game:GetService("Players")
-local HttpService = game:GetService("HttpService")
-local StatsService = game:GetService("Stats")
-local UIS = game:GetService("UserInputService")
-local MarketplaceService = game:GetService("MarketplaceService")
-local CoreGui = game:GetService("CoreGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
 
