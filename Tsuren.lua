@@ -784,7 +784,7 @@ tPlayers:CreateToggle({Name="Through Barriers", CurrentValue=false, Callback=fun
 -- Infinite Stamina
 local StaminaController
 pcall(function() StaminaController=Knit.GetController("StaminaController") end)
-local SharedInterfaceStates=require(ReplicatedStorage.Shared.SharedInterfaceStates)
+local SharedInterfaceStates=require(ReplicatedStorage.Shared.States)
 local Movement=require(ReplicatedStorage.Shared.Defaults.Movement)
 local staminaOn=false
 local staminaConn
@@ -809,80 +809,186 @@ UIS.InputBegan:Connect(function(i,gp)
     end
 end)
 
---==================================================
--- PACK TAB
---==================================================
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
-local Knit = require(ReplicatedStorage.Packages.Knit)
+local LocalPlayer = Players.LocalPlayer
+
+local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
 local PacksService = Knit.GetService("PacksService")
 
-local PacksData = require(ReplicatedStorage.Shared.Defaults.Packs)
+local PacksData = require(
+	ReplicatedStorage:WaitForChild("Shared")
+		:WaitForChild("Defaults")
+		:WaitForChild("Packs")
+)
 
--- Pack list
+local Enums = require(
+	ReplicatedStorage:WaitForChild("Shared")
+		:WaitForChild("Enums")
+)
+
 local PackTypes = {}
-for name,_ in pairs(PacksData.ItemData) do
-    table.insert(PackTypes, name)
+for name in pairs(PacksData.ItemData) do
+	table.insert(PackTypes, name)
 end
 table.sort(PackTypes)
 
--- State
 local SelectedPack = PackTypes[1]
+local SelectedCurrency = "Points"
 local AutoBuy = false
 local Buying = false
 
--- Buy func
-local function BuyPack()
-    if Buying then return end
-    Buying = true
+local CurrencyMap = {
+	["Points"] = Enums.Currency.Primary,
+	["Coins"] = Enums.Currency.Primary, -- fallback (oyunda coins yok)
+	["SkillPoints"] = "SkillPoints",
+	["Robux"] = "Robux"
+}
 
-    pcall(function()
-        PacksService:ProcessPurchase(SelectedPack, "Coins")
-    end)
+local function ResolvePurchaseOption(packName, wanted)
+	local pack = PacksData.ItemData[packName]
+	if not pack then return nil end
 
-    task.wait(1.2)
-    Buying = false
+	local mapped = CurrencyMap[wanted]
+	if pack.PurchaseOptions[mapped] then
+		return mapped
+	end
+
+	if pack.PurchaseOptions[Enums.Currency.Primary] then
+		return Enums.Currency.Primary
+	end
+	if pack.PurchaseOptions.SkillPoints then
+		return "SkillPoints"
+	end
+	if pack.PurchaseOptions.Robux then
+		return "Robux"
+	end
+
+	return nil
 end
 
--- Auto loop
+local function BuyPack()
+	if Buying then return end
+	Buying = true
+
+	local option = ResolvePurchaseOption(SelectedPack, SelectedCurrency)
+	if not option then
+		Rayfield:Notify({
+			Title = "Pack Error",
+			Content = "There is no suitable currency for this pack.",
+			Duration = 4
+		})
+		Buying = false
+		return
+	end
+
+	pcall(function()
+		PacksService:ProcessPurchase(SelectedPack, option)
+	end)
+
+	task.wait(1)
+	Buying = false
+end
+
+-- AUTO BUY LOOP
 task.spawn(function()
-    while task.wait(2) do
-        if AutoBuy and not Buying then
-            BuyPack()
-        end
-    end
+	while task.wait(2) do
+		if AutoBuy and not Buying then
+			BuyPack()
+		end
+	end
 end)
 
+-- ================================
+-- REDEEM CODES
+-- ================================
+local Coupons = {
+	"PACKS","SLS25","100kLikes","battlepass","xmas","90kLikes","80kLikes",
+	"console!","70kLikes","Part1","60kLikes","50kLikes","GKFix!",
+	"40kLikes","30KLIKES","slscomp","25klikes","49kmembers",
+	"goalsaver","goalscorer","number1soccergame","islandmapforever",
+	"Darkvaderbovin","SeniorYeet","newyears2026","veterantalking",
+	"johnsnewyear","MrCooperth","Robloxpls"
+}
+
+local RedeemRF
+pcall(function()
+	RedeemRF =
+		ReplicatedStorage.Packages._Index["sleitnick_knit@1.7.0"]
+			.knit.Services.RewardsService.RF.RedeemCode
+end)
+
+-- ================================
 -- UI
+-- ================================
 local PacksTab = Window:CreateTab("Packs", "shopping-cart")
 
 PacksTab:CreateDropdown({
-    Name = "Pack",
-    Options = PackTypes,
-    CurrentOption = SelectedPack,
-    Callback = function(v)
-        if type(v) == "table" then
-            SelectedPack = v[1]
-        else
-            SelectedPack = v
-        end
-    end
+	Name = "Pack",
+	Options = PackTypes,
+	CurrentOption = SelectedPack,
+	Callback = function(v)
+		SelectedPack = type(v) == "table" and v[1] or v
+	end
+})
+
+PacksTab:CreateDropdown({
+	Name = "Currency",
+	Options = {"Points", "Coins", "SkillPoints", "Robux"},
+	CurrentOption = SelectedCurrency,
+	Callback = function(v)
+		SelectedCurrency = type(v) == "table" and v[1] or v
+	end
 })
 
 PacksTab:CreateButton({
-    Name = "Buy Pack",
-    Callback = function()
-        BuyPack()
-    end
+	Name = "Buy Pack",
+	Callback = BuyPack
 })
 
 PacksTab:CreateToggle({
-    Name = "Auto Buy",
-    CurrentValue = false,
-    Callback = function(v)
-        AutoBuy = v
-    end
+	Name = "Auto Buy",
+	CurrentValue = false,
+	Callback = function(v)
+		AutoBuy = v
+	end
+})
+
+local RedeemTab = Window:CreateTab("Redeem", "gift")
+
+RedeemTab:CreateButton({
+	Name = "Redeem All Codes",
+	Callback = function()
+		if not RedeemRF then
+			StarterGui:SetCore("SendNotification", {
+				Title = "Error",
+				Text = "Redeem: can't found RemoteFunction! for Codes",
+				Duration = 5
+			})
+			return
+		end
+
+		for _, code in ipairs(Coupons) do
+			local ok, result = pcall(function()
+				return RedeemRF:InvokeServer(code)
+			end)
+
+			if ok and result == true then
+				print("redeem successful worked code is:", code)
+			end
+
+			task.wait(0.25)
+		end
+
+		Rayfield:Notify({
+			Title = "Redeem",
+			Content = "redeem code is tryed times up or deleted.",
+			Duration = 4
+		})
+	end
 })
 
 
@@ -1314,3 +1420,289 @@ if newReachEnabled and hrp and char then
     newReachPart.CFrame = hrp.CFrame
   end
 end)
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+local MusicList = {
+	["Stay With Me"] = 137717310854691,
+	["Gondor Theme"] = 9123456789,
+	["Night Drive"] = 8234567891,
+	["Lonely"] = 7345678912,
+	["Memory"] = 6456789123
+}
+
+local function normalize(str)
+	return string.lower(string.gsub(str or "","[%s%-_]",""))
+end
+
+local MusicSound = Instance.new("Sound")
+MusicSound.Volume = 0.6
+MusicSound.Parent = SoundService
+
+local EQ = Instance.new("EqualizerSoundEffect")
+EQ.LowGain = 8
+EQ.MidGain = 0
+EQ.HighGain = -3
+EQ.Parent = MusicSound
+
+local Compressor
+pcall(function()
+	Compressor = Instance.new("CompressorSoundEffect")
+	Compressor.Threshold = -30
+	Compressor.Ratio = 4
+	Compressor.MakeupGain = 3
+	Compressor.Parent = MusicSound
+end)
+
+local function ToggleBass(on)
+	pcall(function()
+		EQ.Enabled = on
+		if Compressor then
+			Compressor.Enabled = on
+		end
+	end)
+end
+
+local gui = Instance.new("ScreenGui",PlayerGui)
+gui.Name = "TsurenStudios"
+gui.ResetOnSpawn = false
+
+local main = Instance.new("Frame",gui)
+main.Size = UDim2.fromScale(0.42,0.32)
+main.Position = UDim2.fromScale(0.29,0.25)
+main.BackgroundColor3 = Color3.fromRGB(15,15,20)
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,10)
+
+do
+	local dragging, dragStart, startPos
+	main.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = i.Position
+			startPos = main.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+			local delta = i.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+end
+
+local title = Instance.new("TextLabel",main)
+title.Size = UDim2.new(1,0,0,38)
+title.BackgroundTransparency = 1
+title.Text = "TsurenStudios | Music Admin"
+title.TextColor3 = Color3.fromRGB(0,170,255)
+title.Font = Enum.Font.GothamBold
+title.TextScaled = true
+
+local box = Instance.new("TextBox",main)
+box.Size = UDim2.new(0.9,0,0,36)
+box.Position = UDim2.fromScale(0.05,0.27)
+box.PlaceholderText = "Made By | Tsubasa"
+box.Text = ""
+box.TextColor3 = Color3.new(1,1,1)
+box.BackgroundColor3 = Color3.fromRGB(25,25,30)
+box.Font = Enum.Font.Code
+box.TextSize = 16
+box.ClearTextOnFocus = false
+Instance.new("UICorner",box).CornerRadius = UDim.new(0,8)
+
+local listFrame = Instance.new("Frame",main)
+listFrame.Size = UDim2.new(0.6,0,0.39,0)
+listFrame.Position = UDim2.fromScale(0.06,0.50)
+listFrame.BackgroundTransparency = 1
+local layout = Instance.new("UIListLayout",listFrame)
+layout.Padding = UDim.new(0,4)
+
+local function clearButtons()
+	for _,v in ipairs(listFrame:GetChildren()) do
+		if v:IsA("TextButton") then v:Destroy() end
+	end
+end
+
+local function createButton(name)
+	local b = Instance.new("TextButton",listFrame)
+	b.Size = UDim2.new(1,0,0,24)
+	b.BackgroundColor3 = Color3.fromRGB(20,30,45)
+	b.TextColor3 = Color3.fromRGB(0,170,255)
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 12
+	b.Text = name
+	Instance.new("UICorner",b).CornerRadius = UDim.new(0,6)
+	b.MouseButton1Click:Connect(function()
+		box.Text = "play "..name
+		clearButtons()
+	end)
+end
+
+box:GetPropertyChangedSignal("Text"):Connect(function()
+	clearButtons()
+	local words = {}
+	for w in box.Text:gmatch("%S+") do table.insert(words,w) end
+	local last = words[#words] or ""
+	local key = normalize(last)
+	if key == "" then return end
+
+	if normalize(words[1]) == "play" then
+		for name,_ in pairs(MusicList) do
+			if normalize(name):find(key,1,true) then
+				createButton(name)
+			end
+		end
+	end
+end)
+
+box.FocusLost:Connect(function(enter)
+	if not enter then return end
+	local cmd,args = box.Text:match("^(%S+)%s*(.*)$")
+	if not cmd then return end
+	cmd = cmd:lower()
+	if cmd == "play" then
+		for name,id in pairs(MusicList) do
+			if normalize(name) == normalize(args) then
+				MusicSound.SoundId = "rbxassetid://"..id
+				MusicSound:Play()
+			end
+		end
+	elseif cmd == "stop" then
+		MusicSound:Stop()
+	elseif cmd == "pause" then
+		MusicSound:Pause()
+	elseif cmd == "resume" then
+		MusicSound:Resume()
+	elseif cmd == "volume" then
+		local v = tonumber(args)
+		if v then MusicSound.Volume = math.clamp(v,0,1) end
+	elseif cmd == "bass" then
+		ToggleBass(args == "on")
+	end
+end)
+
+local timeLabel = Instance.new("TextLabel",main)
+timeLabel.Size = UDim2.new(0,120,0,18)
+timeLabel.Position = UDim2.fromScale(0.5,0.9)
+timeLabel.AnchorPoint = Vector2.new(0.5,0.5)
+timeLabel.BackgroundTransparency = 1
+timeLabel.Font = Enum.Font.Code
+timeLabel.TextSize = 14
+timeLabel.TextColor3 = Color3.fromRGB(200,200,200)
+timeLabel.Text = "Waiting Music..."
+
+RunService.RenderStepped:Connect(function()
+	if MusicSound.IsLoaded then
+		timeLabel.Text = string.format("%02d:%02d / %02d:%02d",
+			MusicSound.TimePosition//60, MusicSound.TimePosition%60,
+			MusicSound.TimeLength//60, MusicSound.TimeLength%60)
+	end
+end)
+
+
+local vis = Instance.new("Frame",main)
+vis.Size = UDim2.new(0.9,0,0,6)
+vis.Position = UDim2.fromScale(0.05,0.92)
+vis.BackgroundTransparency = 1
+
+local bars = {}
+for i=1,20 do
+	local bar = Instance.new("Frame",vis)
+	bar.Size = UDim2.new(0.04,0,0.2,0)
+	bar.Position = UDim2.fromScale((i-1)*0.05,0.5)
+	bar.AnchorPoint = Vector2.new(0,0.5)
+	bar.BackgroundColor3 = Color3.fromHSV(i/20,1,1)
+	bars[i] = bar
+end
+
+RunService.RenderStepped:Connect(function()
+	if MusicSound.IsPlaying then
+		local l = MusicSound.PlaybackLoudness / 500
+		for i,b in ipairs(bars) do
+			b.Size = UDim2.new(0.04,0,math.clamp(l*(i/20),0.1,1),0)
+		end
+	end
+end)
+
+
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local gui = PlayerGui:WaitForChild("TsurenStudios", 5)
+if not gui then
+	warn("GUI bulunamadı!")
+end
+
+local VERIFY_ICON = utf8.char(0xE000)
+local VerifyEnabled = false
+
+local function HandleCommand(text)
+	text = text:lower()
+
+	if text == ";t close" and gui then
+		gui.Enabled = false
+		return true
+	end
+
+	if text == ";t open" and gui then
+		gui.Enabled = true
+		return true
+	end
+
+	if text == ";t verify" then
+		VerifyEnabled = true
+		return true
+	end
+
+	if text == ";t unverify" then
+		VerifyEnabled = false
+		return true
+	end
+
+	return false
+end
+
+TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
+	local props = Instance.new("TextChatMessageProperties")
+
+	if not chatMessage.TextSource then
+		return props
+	end
+
+	if chatMessage.TextSource.UserId ~= LocalPlayer.UserId then
+		return props
+	end
+
+	local text = chatMessage.Text
+	if not text then
+		return props
+	end
+
+	if HandleCommand(text) then
+		props.Text = ""
+		props.PrefixText = ""
+		return props
+	end
+
+	if VerifyEnabled then
+		props.PrefixText = string.gsub(
+			chatMessage.PrefixText,
+			":$",
+			VERIFY_ICON .. ":"
+		)
+	end
+
+	return props
+end
