@@ -180,7 +180,6 @@ end
 StartLoadingScreen()
 
 repeat task.wait() until not LoadingActive
-	
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
     Name = "TsurenStudios | SLS 🌸",
