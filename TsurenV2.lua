@@ -2,7 +2,6 @@
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Teams = game:GetService("Teams")
@@ -12,10 +11,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
-local LogService = game:GetService("LogService")
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Stats = LocalPlayer:WaitForChild("Stats")
 local CoreGui = game:GetService("CoreGui")
+local LogService = game:GetService("LogService")
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
 local LoadingActive = false
 
 local function StartLoadingScreen()
@@ -164,17 +165,18 @@ local function StartLoadingScreen()
         end)
     end)
 
-    while LoadingActive do
-        task.wait()
-    end
+    while LoadingActive do task.wait() end
 end
 
+-- Başlat
 StartLoadingScreen()
+
+-- Rayfield Load
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 local Window = Rayfield:CreateWindow({
-    Name = "TsurenStudios | SLS 🌸", 
-    LoadingTitle = "TsurenStudios", 
-    LoadingSubtitle = "Made by Tsubasa ♥️", 
+    Name = "TsurenStudios | SLS 🌸",
+    LoadingTitle = "TsurenStudios",
+    LoadingSubtitle = "Made by Tsubasa ♥️",
     Theme = "Bloom"
 })
 
