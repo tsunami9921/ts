@@ -88,16 +88,19 @@ local function StartLoadingScreen()
 		consoleText.Text = table.concat(logs,"\n")
 	end
 
-	LogService.MessageOut:Connect(function(message, messageType)
-		addLog("> "..message)
-	end)
+	-- Only connect MessageOut if it exists
+	if LogService and LogService:FindFirstChild("MessageOut") then
+		LogService.MessageOut:Connect(function(message, messageType)
+			addLog("> "..message)
+		end)
+	end
 
 	-- Sound
 	local music = Instance.new("Sound")
 	music.SoundId = "rbxassetid://9045130736"
 	music.Volume = 1
 	music.Looped = false
-	music.Parent = gui -- GUI içine koydum, SoundService bazen scriptlerde block olabilir
+	music.Parent = gui -- GUI içine koyduk
 	music:Play()
 
 	-- Fake logs
@@ -175,7 +178,7 @@ local function StartLoadingScreen()
 	end
 end
 
--- Start the loadscreen
+-- Start Loadscreen
 StartLoadingScreen()
 repeat task.wait() until not LoadingActive
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
