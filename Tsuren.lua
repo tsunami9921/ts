@@ -373,7 +373,7 @@ WelcomeTab:CreateParagraph({
 local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..."})
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
-
+local pointsLabel = WelcomeTab:CreateParagraph({Title="Points", Content="Loading..."})
 
 -- TSURENMODULE
 local TsurenModule = {}
@@ -1413,7 +1413,7 @@ local tWeather=Window:CreateTab("Weather","cloud-rain")
 local rainEnabled=false
 tWeather:CreateToggle({Name="Rain", CurrentValue=false, Callback=function(v)
     rainEnabled=v
-    local WeatherState=require(ReplicatedStorage.Shared.SharedInterfaceStates).Player.Preferences.Weather
+    local WeatherState=require(ReplicatedStorage.Shared.States).Player.Preferences.Weather
     WeatherState:set(v and "Rain" or "Clear")
 end})
 
@@ -1562,6 +1562,7 @@ RunService.Heartbeat:Connect(function(dt)
         coinsLabel:Set({Title="Coins", Content=stats.Coins.Container.Amount.Text})
         lvlLabel:Set({Title="Level", Content=stats.Experience.Container.Amount.Text})
         xpLabel:Set({Title="XP", Content=stats.Experience.Container.Other.Text})
+		pointsLabel:Set({Title="Skills Points", Content=stats.SkillPoints.Container.Amount.Text})
     end
 
     -- Troll Reach
