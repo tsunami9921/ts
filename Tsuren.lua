@@ -1641,6 +1641,7 @@ end
 local gui = Instance.new("ScreenGui",PlayerGui)
 gui.Name = "TsurenStudios"
 gui.ResetOnSpawn = false
+gui.Enabled = false
 
 local main = Instance.new("Frame",gui)
 main.Size = UDim2.fromScale(0.42,0.32)
