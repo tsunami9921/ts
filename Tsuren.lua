@@ -10,12 +10,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local SoundService game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local LoadingActive = false
-
+local SoundService game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
 local function StartLoadingScreen()
 	if LoadingActive then return end
 	LoadingActive = true
