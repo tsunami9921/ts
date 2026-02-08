@@ -1820,7 +1820,7 @@ local function HandleCommand(text)
 	return false
 end
 
-TextChatService.OnIncomingMessage = function(chatMessage: TextChatMessage)
+TextChatService.OnIncomingMessage = function(chatMessage)
 	local props = Instance.new("TextChatMessageProperties")
 
 	if not chatMessage.TextSource then
