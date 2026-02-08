@@ -27,7 +27,7 @@ function module:Init(Settings)
         self.UpdateConnection:Disconnect()
     end
 
-    -- Her Heartbeat'de update et
+    
     self.UpdateConnection = RunService.Heartbeat:Connect(function()
         local Clock = os.clock()
         for i = #module.UpdateQueue, 1, -1 do
