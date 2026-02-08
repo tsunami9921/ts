@@ -1,4 +1,4 @@
--- Maded by Tsubasa
+-- by Tsubasa
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,11 +15,11 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local LoadingActive = false
 local SoundService game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
-local function StartLoadingScreen()
+local funtion StartLoadingScreen()
 	if LoadingActive then return end
 	LoadingActive = true
 
-	-- GUI
+	
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "LoadingScreen"
 	gui.IgnoreGuiInset = true
@@ -31,7 +31,7 @@ local function StartLoadingScreen()
 	bg.BackgroundColor3 = Color3.fromRGB(0,0,0)
 	bg.Parent = gui
 
-	-- TITLE
+	
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1,0,0,80)
 	title.Position = UDim2.new(0,0,0.05,0)
@@ -51,7 +51,7 @@ local function StartLoadingScreen()
 		end
 	end)
 
-	-- CONSOLE
+	
 	local consoleFrame = Instance.new("Frame")
 	consoleFrame.Size = UDim2.fromScale(0.6,0.45)
 	consoleFrame.Position = UDim2.fromScale(0.2,0.3)
@@ -84,14 +84,14 @@ local function StartLoadingScreen()
 		consoleText.Text = table.concat(logs, "\n")
 	end
 
-	-- SAFE LOG
+	
 	if LogService then
 		LogService.MessageOut:Connect(function(message)
 			addLog("> "..message)
 		end)
 	end
 
-	-- 🎵 MUSIC (FIXED)
+	
 	local music = Instance.new("Sound")
 	music.SoundId = "rbxassetid://9045130736"
 	music.Volume = 1
@@ -100,7 +100,7 @@ local function StartLoadingScreen()
 	task.wait(0.2)
 	music:Play()
 
-	-- FAKE LOGS
+	
 	task.spawn(function()
 		local fakeLogs = {
 			"Initializing TsurenStudios Client...",
@@ -116,12 +116,12 @@ local function StartLoadingScreen()
 		end
 	end)
 
-	-- AFTER 16s
-	task.delay(16, function()
+	
+	task.delay(14, function()
 		music:Stop()
 		consoleFrame.Visible = false
 
-		-- ❤️ HEART CONTAINER (SMALL)
+		
 		local heartFrame = Instance.new("Frame")
 		heartFrame.Size = UDim2.fromScale(0.4,0.4) -- 👈 KÜÇÜK
 		heartFrame.Position = UDim2.fromScale(0.3,0.3)
@@ -133,7 +133,7 @@ local function StartLoadingScreen()
 		heart.BackgroundTransparency = 1
 		heart.TextColor3 = Color3.fromRGB(255,0,0)
 		heart.TextScaled = false
-		heart.TextSize = 18 -- 👈 BOYUT FIX
+		heart.TextSize = 16
 		heart.Font = Enum.Font.Code
 		heart.TextXAlignment = Enum.TextXAlignment.Center
 		heart.TextYAlignment = Enum.TextYAlignment.Center
@@ -164,7 +164,7 @@ local function StartLoadingScreen()
 
 		heart.Text = heartText
 
-		-- CLOSE
+		
 		task.delay(3, function()
 			local tween = TweenService:Create(bg, TweenInfo.new(1), {
 				Position = UDim2.new(0,0,2,0)
@@ -438,7 +438,7 @@ function TsurenModule.TrueAutoGetBall()
     end
 end
 
--- Top bizde mi kontrolü
+
 local function HasBall()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     local player = game.Players.LocalPlayer
@@ -465,12 +465,10 @@ local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Modules
-local TsurenModule = TsurenModule -- yukarda zaten var
+local TsurenModule = TsurenModule
 
--- AutoFarm state
 local AutoFarmEnabled = false
 
--- Notification Helper (CoreGui)
 local function SendNotification(title, text, duration)
     duration = duration or 3
     game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -481,7 +479,6 @@ local function SendNotification(title, text, duration)
     })
 end
 
--- Check if player has ball
 local function HasBall()
     return LocalPlayer:GetAttribute("HasBall") or false
 end
@@ -496,7 +493,6 @@ local function GetBallHolder()
     return nil
 end
 
--- AutoShoot fix: top pozisyonuna göre
 local function AutoShoot()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
     if not ball then return end
@@ -517,7 +513,7 @@ local function AutoShoot()
         "ShotActivated",
         ball,
         ball.Position,
-        goalPos + Vector3.new(0,5,0) -- biraz yukarıdan
+        goalPos + Vector3.new(0,5,0)
     }
 
     local ActionService = ReplicatedStorage:WaitForChild("Packages")
@@ -530,9 +526,9 @@ local function AutoShoot()
     end)
 end
 
--- Main AutoFarm loop
+
 local function StartAutoFarm()
-    -- Team kontrol
+    
     if not LocalPlayer.Team then
         SendNotification("Auto Farm", "Join a Team First!", 3)
         return
@@ -545,10 +541,10 @@ local function StartAutoFarm()
             local character = LocalPlayer.Character
             if character and character:FindFirstChild("Hitbox") and character:FindFirstChild("HumanoidRootPart") then
                 
-                -- Hitbox büyüt
+                
                 character.Hitbox.Size = Vector3.new(500,50,500)
 
-                -- Orta noktada bekle
+                
                 local stadium = workspace:FindFirstChild("Stadium")
                 if stadium and stadium:FindFirstChild("Field") and stadium.Field:FindFirstChild("Grass") then
                     character.HumanoidRootPart.CFrame = stadium.Field.Grass.CFrame + Vector3.new(0,20,0)
@@ -557,10 +553,10 @@ local function StartAutoFarm()
                 local ballHolder = GetBallHolder()
 
                 if HasBall() then
-                    -- Top bizdeyse auto shoot
+                    
                     pcall(AutoShoot)
                 elseif ballHolder then
-                    -- Rakipteyse teleport + tackle
+                    
                     if ballHolder.Character and ballHolder.Character:FindFirstChild("HumanoidRootPart") then
                         local originalCFrame = character.HumanoidRootPart.CFrame
                         character:PivotTo(ballHolder.Character.HumanoidRootPart.CFrame + Vector3.new(0,0,0))
@@ -568,11 +564,11 @@ local function StartAutoFarm()
                         character:PivotTo(originalCFrame)
                     end
                 else
-                    -- Top boşta → kale shoot
+                    
                     pcall(AutoShoot)
                 end
 
-                -- Enemy goal hitbox büyüt
+                
                 for _, pl in pairs(Players:GetPlayers()) do
                     if pl.Team ~= LocalPlayer.Team and pl.Team ~= nil then
                         local enemyGoal = workspace:FindFirstChild("Stadium") and workspace.Stadium.Teams:FindFirstChild(pl.Team.Name)
@@ -587,7 +583,7 @@ local function StartAutoFarm()
             task.wait(0.2)
         end
 
-        -- Toggle kapatıldığında hitbox resetle
+        
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("Hitbox") then
             character.Hitbox.Size = Vector3.new(4.521,5.73,2.398)
@@ -597,7 +593,7 @@ local function StartAutoFarm()
     end)
 end
 
--- Rayfield MainTab Toggle
+
 MainTab:CreateToggle({
     Name = "AutoFarm (Beta)",
     CurrentValue = false,
@@ -615,12 +611,12 @@ local BringBallEnabled = false
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Saf karakter alma
+
 local function getCharacter()
     return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 end
 
--- Rakip oyuncu topa sahip mi kontrol
+
 local function PlayerHasBall()
     for _, p in pairs(Players:GetPlayers()) do
         if p:GetAttribute("HasBall", false) and p.Team ~= LocalPlayer.Team and p:GetAttribute("TeamPosition") ~= "GK" then
@@ -630,7 +626,7 @@ local function PlayerHasBall()
     return nil
 end
 
--- Local player topa sahip mi
+
 local function LocalHasBall()
     local char = getCharacter()
     local ball = workspace:FindFirstChild("Misc") and workspace.Misc:FindFirstChild("Football")
@@ -641,23 +637,22 @@ local function LocalHasBall()
     return false
 end
 
--- Loop başlat, ama toggle true olana kadar hiçbir şey yapma
+
 spawn(function()
     while true do
         task.wait(0.2)
 
-        if not BringBallEnabled then continue end -- TOGGLE KAPALIYSA SKIP
+        if not BringBallEnabled then continue end
 
         local char = getCharacter()
         if not char or not char:FindFirstChild("Hitbox") then continue end
 
-        -- Toggle açıkken hitbox büyüt
         char.Hitbox.Size = Vector3.new(500,50,500)
 
         local enemyWithBall = PlayerHasBall()
 
         if enemyWithBall then
-            -- Rakip topa sahipse tackle (teleport yok)
+            
             local currentCFrame = char.HumanoidRootPart.CFrame
             char:PivotTo(enemyWithBall.Character.HumanoidRootPart.CFrame)
 
@@ -674,14 +669,14 @@ spawn(function()
         end
 
         if LocalHasBall() then
-            -- Bizdeyse shoot yap
+            
             pcall(function()
                 TsurenModule.TrueAutoShoot()
             end)
         end
     end
 end)
--- Bring Ball Toggle
+
 MainTab:CreateToggle({
     Name = "Bring Ball (Beta)",
     CurrentValue = false,
@@ -704,10 +699,10 @@ MainTab:CreateToggle({
     end,
 })
 
--- Anti-AFK Toggle
+
 MainTab:CreateToggle({
     Name = "Anti-AFK (Beta)",
-    CurrentValue = true, -- Script açılır açılmaz aktif olsun
+    CurrentValue = true,
     Flag = "AntiAFKToggle",
     Callback = function(state)
         local Players = game:GetService("Players")
@@ -715,7 +710,7 @@ MainTab:CreateToggle({
         local vu = game:GetService("VirtualUser")
 
         if state then
-            -- Eğer zaten bağlı değilse bağla
+			
             if not _G.AntiAFKConnection then
                 _G.AntiAFKConnection = LocalPlayer.Idled:Connect(function()
                     vu:CaptureController()
@@ -723,7 +718,7 @@ MainTab:CreateToggle({
                 end)
             end
         else
-            -- Kapattığında bağlantıyı kes
+        
             if _G.AntiAFKConnection then
                 _G.AntiAFKConnection:Disconnect()
                 _G.AntiAFKConnection = nil
@@ -811,7 +806,6 @@ task.spawn(function()
 end)
 
 
---================ FLY (SAFE / ANTI-KICK) =================
 
 local flyEnabled = false
 local flySpeed = 60
@@ -822,10 +816,9 @@ local function startFly()
     local hum = GetHumanoid()
     if not hrp or not hum then return end
 
-    -- güvenli fizik
     hum:ChangeState(Enum.HumanoidStateType.Physics)
 
-    -- varsa eskiyi sil
+    
     for _,v in pairs(hrp:GetChildren()) do
         if v:IsA("BodyVelocity") and v.Name == "FlyVelocity" then
             v:Destroy()
@@ -846,20 +839,17 @@ local function startFly()
         local moveDir = hum.MoveDirection
         local vel = Vector3.zero
 
-        -- ileri / sağ / sol
         vel += cam.CFrame.LookVector * moveDir.Z * flySpeed
         vel += cam.CFrame.RightVector * moveDir.X * flySpeed
 
-        -- yukarı / aşağı
         if UIS:IsKeyDown(Enum.KeyCode.Space) then
             vel += Vector3.new(0, flySpeed * 0.6, 0)
         elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
             vel -= Vector3.new(0, flySpeed * 0.6, 0)
         else
-            vel += Vector3.new(0, -4, 0) -- süzülme (kick-safe)
+            vel += Vector3.new(0, -4, 0)
         end
 
-        -- aşırı yükselme koruması
         if hrp.Position.Y > 130 then
             vel = Vector3.new(vel.X, -8, vel.Z)
         end
@@ -892,7 +882,6 @@ local function stopFly()
     end
 end
 
---================ UI =================
 
 tPlayers:CreateToggle({
     Name = "Fly (Bugs / Anti Kick)",
@@ -917,7 +906,7 @@ tPlayers:CreateSlider({
     end
 })
 
---================ HOTKEY (F) =================
+
 HotkeyEvents.Fly.Event:Connect(function(v)
     flyEnabled = v
     if v then
@@ -937,7 +926,7 @@ tPlayers:CreateSlider({Name="JumpPower", Range={50,200}, Increment=1, CurrentVal
     if h then h.JumpPower=v end
 end})
 
--- Through Barriers fix
+
 local charThrough=false
 local function updateCollision()
     local char=LocalPlayer.Character
@@ -951,7 +940,6 @@ end
 
 tPlayers:CreateToggle({Name="Through Barriers", CurrentValue=false, Callback=function(v) charThrough=v updateCollision() end})
 
--- Infinite Stamina
 local StaminaController
 pcall(function() StaminaController=Knit.GetController("StaminaController") end)
 local SharedInterfaceStates=require(ReplicatedStorage.Shared.States)
@@ -1063,7 +1051,6 @@ local function BuyPack()
 	Buying = false
 end
 
--- AUTO BUY LOOP
 task.spawn(function()
 	while task.wait(2) do
 		if AutoBuy and not Buying then
@@ -1072,9 +1059,7 @@ task.spawn(function()
 	end
 end)
 
--- ================================
--- REDEEM CODES
--- ================================
+
 local Coupons = {
 	"PACKS","SLS25","100kLikes","battlepass","xmas","90kLikes","80kLikes",
 	"console!","70kLikes","Part1","60kLikes","50kLikes","GKFix!",
@@ -1091,9 +1076,7 @@ pcall(function()
 			.knit.Services.RewardsService.RF.RedeemCode
 end)
 
--- ================================
--- UI
--- ================================
+
 local PacksTab = Window:CreateTab("Packs", "shopping-cart")
 
 PacksTab:CreateDropdown({
@@ -1162,7 +1145,6 @@ RedeemTab:CreateButton({
 })
 
 
---================ ANIMATIONS / DANCE TAB =================
 local tAnim = Window:CreateTab("Animations / Dances","star")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1171,13 +1153,13 @@ local LocalPlayer = Players.LocalPlayer
 local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = char:WaitForChild("Humanoid")
 
--- Animasyonlar listesi
+
 local animations = {
-    -- Direct Animations from ReplicatedStorage
+    
     {name="Sui", path=ReplicatedStorage.Assets.Animations.Other.Sui},
     {name="Orange Dance", path=ReplicatedStorage.Assets.Items.Celebrations["Orange Dance"]},
 
-    -- Diğerler id ve isim listesi
+    
     {id="17454350795", name="Shh - ⭐"},
     {id="118995435851830", name="God Mode Awakening🔥  - ⭐"},
     {id="13233771992", name="Take The L - ⭐"},
@@ -1203,10 +1185,10 @@ local animations = {
     {id="126168053681827", name="Soon - ⭐"}
 }
 
--- Animasyon oynatma fonksiyonu
+
 local function playAnimation(anim)
     if anim.path then
-        -- ReplicatedStorage içindeki animation objesi
+        
         local track = Humanoid:LoadAnimation(anim.path)
         track:Play()
     elseif anim.id then
@@ -1218,7 +1200,7 @@ local function playAnimation(anim)
     end
 end
 
--- Butonları ekleme
+
 for _, anim in pairs(animations) do
     tAnim:CreateButton({
         Name = anim.name,
@@ -1229,9 +1211,6 @@ for _, anim in pairs(animations) do
 end
 
 
---==================================================
--- TEAM + POSITION TAB
---==================================================
 
 local Players = game:GetService("Players")
 local Teams = game:GetService("Teams")
@@ -1258,7 +1237,6 @@ local SelectedTeam = "Home"
 local SelectedPos = Positions[1]
 local AutoJoin = false
 
--- Join Team func
 local function JoinTeam(teamName)
     pcall(function()
         if TeamController and TeamController.JoinTeam then
@@ -1269,7 +1247,7 @@ local function JoinTeam(teamName)
     end)
 end
 
--- Set Position func
+
 local function SetPosition(pos)
     pcall(function()
         if TeamController and TeamController.SetPosition then
@@ -1277,11 +1255,10 @@ local function SetPosition(pos)
         end
     end)
 
-    -- fallback attribute
     LocalPlayer:SetAttribute("TeamPosition", pos)
 end
 
--- Auto Apply loop
+
 task.spawn(function()
     while task.wait(2) do
         if AutoJoin then
@@ -1292,7 +1269,7 @@ task.spawn(function()
     end
 end)
 
--- UI
+
 local TeamTab = Window:CreateTab("Team", "users")
 
 TeamTab:CreateDropdown({
@@ -1338,7 +1315,7 @@ TeamTab:CreateToggle({
     end
 })
 
---================ BALL TAB =================
+
 local tBall=Window:CreateTab("Ball","circle")
 local freezeBall=false
 local normalVel=60
@@ -1360,20 +1337,19 @@ end})
 tBall:CreateSlider({Name="Normal Velocity Power", Range={20,100}, Increment=1, CurrentValue=normalVel, Callback=function(v) normalVel=v end})
 tBall:CreateToggle({Name="Freeze Ball", CurrentValue=false, Callback=function(v) freezeBall=v end})
 
---================ GAME TAB =================
+
 local tGame=Window:CreateTab("Game","play")
 
--- Oyun Temel Bilgiler
+
 local productInfo = MarketplaceService:GetProductInfo(game.PlaceId)
 local gameName = productInfo.Name or "Unknown"
 local gameId = game.PlaceId
 local jobId = game.JobId
 local creator = productInfo.Creator and productInfo.Creator.Name or "Unknown"
 
--- Oyun Başlangıç Zamanı
+
 local serverStartTime = tick()
 
--- Paragraphlar
 local gameNameLabel = tGame:CreateParagraph({Title="Game Name", Content=gameName})
 local gameIdLabel = tGame:CreateParagraph({Title="Game ID", Content=tostring(gameId)})
 local jobIdLabel = tGame:CreateParagraph({Title="Server ID", Content=jobId})
@@ -1382,21 +1358,19 @@ local playerCountLabel = tGame:CreateParagraph({Title="Player Count", Content=to
 local serverTimeLabel = tGame:CreateParagraph({Title="Server Uptime", Content="0s"})
 local gameTimeLabel = tGame:CreateParagraph({Title="Game Time (since join)", Content="0s"})
 
--- Update Server Info / Player Count / Times
 RunService.Heartbeat:Connect(function()
-    -- Player count
     playerCountLabel:Set({Title="Player Count", Content=tostring(#Players:GetPlayers())})
-    -- Server Uptime
+	
     local uptime = tick() - serverStartTime
     local mins = math.floor(uptime/60)
     local secs = math.floor(uptime%60)
     serverTimeLabel:Set({Title="Server Uptime", Content=string.format("%dm %ds", mins, secs)})
-    -- Game Time
-    local gameElapsed = os.time() - os.time() + (tick()-serverStartTime) -- basit olarak tick farkı
+
+    local gameElapsed = os.time() - os.time() + (tick()-serverStartTime)
     gameTimeLabel:Set({Title="Game Time", Content=string.format("%dm %ds", mins, secs)})
 end)
 
---================ REACH =================
+
 local tReach=Window:CreateTab("Reach","refresh-cw")
 local trollReach=false
 local trollDist=18
@@ -1408,7 +1382,7 @@ tReach:CreateToggle({Name="Troll Reach (V2)", CurrentValue=false, Callback=funct
 tReach:CreateToggle({Name="NormalReach (V1)", CurrentValue=false, Callback=function(v) LolReach=v end})
 tReach:CreateToggle({Name="New Reach", CurrentValue=false, Callback=function(v) newReachEnabled=v if not v and newReachPart then newReachPart:Destroy() newReachPart=nil end end})
 
---================ WEATHER =================
+
 local tWeather=Window:CreateTab("Weather","cloud-rain")
 local rainEnabled=false
 tWeather:CreateToggle({Name="Rain", CurrentValue=false, Callback=function(v)
@@ -1417,7 +1391,7 @@ tWeather:CreateToggle({Name="Rain", CurrentValue=false, Callback=function(v)
     WeatherState:set(v and "Rain" or "Clear")
 end})
 
---================ GOAL TAB FIX =================
+
 local tGoal = Window:CreateTab("Goal Setting", "target")
 local goalEnabledHome = false
 local goalEnabledAway = false
@@ -1446,7 +1420,7 @@ local function applyGoal(team, state)
     end
 end
 
--- Toggle for Home Goal
+
 tGoal:CreateToggle({
     Name = "Enable Home Goal Hitbox",
     CurrentValue = false,
@@ -1456,7 +1430,7 @@ tGoal:CreateToggle({
     end
 })
 
--- Toggle for Away Goal
+
 tGoal:CreateToggle({
     Name = "Enable Away Goal Hitbox",
     CurrentValue = false,
@@ -1465,7 +1439,7 @@ tGoal:CreateToggle({
         applyGoal("Away", goalEnabledAway)
     end
 })
---================ SERVER =================
+
 local tServer=Window:CreateTab("Server","server")
 local inputGameId=""
 local inputServerId=""
@@ -1484,7 +1458,7 @@ tServer:CreateButton({Name="Server Hop", Callback=function()
     end
 end})
 
---================ ADVANCED FIXES =================
+
 local function setBarriersCollision(state)
     local field = Workspace:FindFirstChild("Stadium") and Workspace.Stadium:FindFirstChild("Field")
     if field then
@@ -1516,7 +1490,7 @@ tPlayers:CreateToggle({
     end
 })
 
---================ HEARTBEAT / MAIN LOOP =================
+
 local delta=0
 local autoGoalEnabled=false
 local autoGoalTeam="Home"
@@ -1530,7 +1504,7 @@ RunService.Heartbeat:Connect(function(dt)
     local hrp=GetHRP()
     local char=LocalPlayer.Character
 
-    -- AUTO FARM
+    
     if autoFarmEnabled and tick()-lastFarmTick>autoFarmCooldown and ball and hrp and char and isBallMine(ball) then
         local dir=(ball.Position-hrp.Position)
         if dir.Magnitude>3 then
@@ -1542,7 +1516,7 @@ RunService.Heartbeat:Connect(function(dt)
         lastFarmTick=tick()
     end
 
-    -- AUTO GOAL
+
     if autoGoalEnabled and tick()-lastGoalTick>=autoGoalDelay then
         local goal=getGoal(autoGoalTeam)
         if ball and goal then
@@ -1552,10 +1526,10 @@ RunService.Heartbeat:Connect(function(dt)
         end
     end
 
-    -- Freeze Ball
+
     if ball then ball.Anchored=freezeBall end
 
-    -- Stats Update
+
     local gui=LocalPlayer.PlayerGui:FindFirstChild("GameGui")
     if gui then
         local stats=gui.LobbyHUD.Topbar.Leaderstats
@@ -1565,18 +1539,16 @@ RunService.Heartbeat:Connect(function(dt)
 		pointsLabel:Set({Title="Skills Points", Content=stats.SkillPoints.Container.Amount.Text})
     end
 
-    -- Troll Reach
+
     if trollReach and ball and hrp and (ball.Position - hrp.Position).Magnitude <= trollDist then
         ball.AssemblyLinearVelocity = hrp.CFrame.LookVector * 35
     end
 
-    -- Normal Reach (V1)
     if LolReach and ball and hrp and (ball.Position - hrp.Position).Magnitude <= normalDist then
         ball.AssemblyLinearVelocity = Vector3.zero
         ball.CFrame = hrp.CFrame * CFrame.new(0,0,-3)
     end
 
-    -- New Reach Visual
 if newReachEnabled and hrp and char then
     if not newReachPart then
         newReachPart = Instance.new("Part")
@@ -1586,7 +1558,7 @@ if newReachEnabled and hrp and char then
         newReachPart.CanCollide = false
         newReachPart.Material = Enum.Material.Neon
         newReachPart.Color = Color3.fromRGB(255,0,0)
-        newReachPart.Parent = Workspace -- Parent Workspace to avoid issues
+        newReachPart.Parent = Workspace
     end
     newReachPart.CFrame = hrp.CFrame
   end
