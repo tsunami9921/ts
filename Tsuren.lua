@@ -13,7 +13,7 @@ local UIS = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local LoadingActive = false
-local SoundService game:GetService("SoundService")
+local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local funtion StartLoadingScreen()
 	if LoadingActive then return end
