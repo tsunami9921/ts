@@ -15,7 +15,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local LoadingActive = false
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
-local funtion StartLoadingScreen()
+local function StartLoadingScreen()
 	if LoadingActive then return end
 	LoadingActive = true
 
