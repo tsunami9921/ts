@@ -1748,11 +1748,13 @@ timeLabel.Text = "Waiting Music..."
 RunService.RenderStepped:Connect(function()
 	if MusicSound.IsLoaded then
 		timeLabel.Text = string.format("%02d:%02d / %02d:%02d",
-			MusicSound.TimePosition//60, MusicSound.TimePosition%60,
-			MusicSound.TimeLength//60, MusicSound.TimeLength%60)
+			math.floor(MusicSound.TimePosition / 60),
+			math.floor(MusicSound.TimePosition % 60),
+			math.floor(MusicSound.TimeLength / 60),
+			math.floor(MusicSound.TimeLength % 60)
+		)
 	end
 end)
-
 
 local vis = Instance.new("Frame",main)
 vis.Size = UDim2.new(0.9,0,0,6)
