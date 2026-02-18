@@ -371,7 +371,6 @@ WelcomeTab:CreateParagraph({
 local coinsLabel = WelcomeTab:CreateParagraph({Title="Coins", Content="Loading..."})
 local lvlLabel   = WelcomeTab:CreateParagraph({Title="Level", Content="Loading..."})
 local xpLabel    = WelcomeTab:CreateParagraph({Title="XP", Content="Loading..."})
-local rankLabel    = WelcomeTab:CreateParagraph({Title="Rank", Content="Loading..."}
 -- TSURENMODULE
 local TsurenModule = {}
 
@@ -1694,7 +1693,6 @@ RunService.Heartbeat:Connect(function(dt)
         coinsLabel:Set({Title="Coins", Content=stats.Coins.Container.Amount.Text})
         lvlLabel:Set({Title="Level", Content=stats.Experience.Container.Amount.Text})
         xpLabel:Set({Title="XP", Content=stats.Experience.Container.Other.Text})
-		rankLabel:Set({Title="Rank", Content=stats.CompetitiveRank.Container.Amount.Text})
     end
 end)
 local Players = game:GetService("Players")
