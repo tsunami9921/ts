@@ -1,1 +1,5 @@
-local = 100
+local ground = workspace.grok
+
+grok.Value = 100
+
+
