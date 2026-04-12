@@ -1,0 +1,2 @@
+local nil
+local a
