@@ -130,46 +130,7 @@ local settingsTable = {
 	System = {
 		usageAnalytics = {Type = 'toggle', Value = true, Name = 'Anonymised Analytics'},
 	}
-}
-local SelectedConfig = nil
-local AutoSave = false
-local AutoExecute = false
-local HttpService = game:GetService("HttpService")
-
-local ConfigFolder = "Rayfield/Configs"
-
-if not isfolder(ConfigFolder) then
-	makefolder(ConfigFolder)
-		end
-
-local function SaveConfig(name)
-	local data = {}
-
-	for i, v in pairs(RayfieldLibrary.Flags) do
-		data[i] = v.CurrentValue or v.CurrentOption or v.CurrentKeybind or v.Color
-	end
-
-	writefile(ConfigFolder.."/"..name..".json", HttpService:JSONEncode(data))
-		end
-
-local function LoadConfig(name)
-	local path = ConfigFolder.."/"..name..".json"
-
-	if not isfile(path) then return end
-
-	local data = HttpService:JSONDecode(readfile(path))
-
-	for i, v in pairs(data) do
-		if RayfieldLibrary.Flags[i] then
-			RayfieldLibrary.Flags[i].CurrentValue = v
-		end
-	end
-		end
-
-local function CreateConfig(name)
-	writefile(ConfigFolder.."/"..name..".json", "{}")
-		end
-		
+}	
 -- Settings that have been overridden by the developer. These will not be saved to the user's configuration file
 -- Overridden settings always take precedence over settings in the configuration file, and are cleared if the user changes the setting in the UI
 local overriddenSettings: { [string]: any } = {} -- For example, overriddenSettings["System.rayfieldOpen"] = "J"
@@ -2985,16 +2946,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 							droption.BackgroundColor3 = SelectedTheme.DropdownSelected
 						end
 					end)
+						end
 				end
-			end
-					
-task.spawn(function()
-	while task.wait(5) do
-		if AutoSave and SelectedConfig then
-			SaveConfig(SelectedConfig)
-		end
-	end
-end)
 			function DropdownSettings:Set(NewOption)
 				DropdownSettings.CurrentOption = NewOption
 
